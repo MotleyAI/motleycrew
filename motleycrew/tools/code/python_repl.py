@@ -1,6 +1,9 @@
+import code
+import re
+import sys
+from io import StringIO
 from typing import List, Optional
 
-from langchain_experimental.utilities import PythonREPL
 from pydantic import BaseModel, Field
 
 from motleycrew.tools import MotleyTool
@@ -26,6 +29,7 @@ class PythonREPLTool(MotleyTool):
     def __init__(
         self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
     ):
+        self.console = code.InteractiveConsole()
         exceptions_to_reflect = (exceptions_to_reflect or []) + [MissingPrintStatementError]
         super().__init__(
             name="python_repl",
@@ -36,9 +40,41 @@ class PythonREPLTool(MotleyTool):
             args_schema=REPLToolInput,
         )
 
+    @staticmethod
+    def sanitize_input(query: str) -> str:
+        """Sanitize input to the python REPL.
+
+        Remove whitespace, backtick & python
+        (if llm mistakes python console as terminal)
+
+        Args:
+            query: The query to sanitize
+
+        Returns:
+            str: The sanitized query
+        """
+        query = re.sub(r"^(\s|`)*(?i:python)?\s*", "", query)
+        query = re.sub(r"(\s|`)*$", "", query)
+        return query
+
     def run(self, command: str) -> str:
         self.validate_input(command)
-        return PythonREPL().run(command)
+
+        # Sanitize the input
+        cleaned_command = self.sanitize_input(command)
+
+        # Capture stdout
+        old_stdout = sys.stdout
+        sys.stdout = captured_output = StringIO()
+
+        try:
+            # Execute the command in the console's namespace
+            exec(cleaned_command, self.console.locals)
+            sys.stdout = old_stdout
+            return captured_output.getvalue()
+        except Exception as e:
+            sys.stdout = old_stdout
+            return repr(e)
 
     def validate_input(self, command: str):
         if "print(" not in command:
