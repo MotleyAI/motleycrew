@@ -9,16 +9,6 @@ from pydantic import BaseModel, Field
 from motleycrew.tools import MotleyTool
 
 
-class MissingPrintStatementError(Exception):
-    """Exception raised when a print statement is missing from the command."""
-
-    def __init__(self, command: str):
-        self.command = command
-        super().__init__(
-            f"Command must contain at least one print statement. Remember to print the results you want to see using print(...)."
-        )
-
-
 class PythonREPLTool(MotleyTool):
     """Python REPL tool. Use this to execute python commands.
 
@@ -30,11 +20,11 @@ class PythonREPLTool(MotleyTool):
         self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
     ):
         self.console = code.InteractiveConsole()
-        exceptions_to_reflect = (exceptions_to_reflect or []) + [MissingPrintStatementError]
         super().__init__(
             name="python_repl",
             description="A Python shell. Use this to execute python commands. Input should be a valid python command. "
-            "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`.",
+            "The output will be the content printed to stdout by the executed code. "
+            "The state of the REPL is preserved between calls.",
             return_direct=return_direct,
             exceptions_to_reflect=exceptions_to_reflect,
             args_schema=REPLToolInput,
@@ -58,8 +48,6 @@ class PythonREPLTool(MotleyTool):
         return query
 
     def run(self, command: str) -> str:
-        self.validate_input(command)
-
         # Sanitize the input
         cleaned_command = self.sanitize_input(command)
 
@@ -68,17 +56,12 @@ class PythonREPLTool(MotleyTool):
         sys.stdout = captured_output = StringIO()
 
         try:
-            # Execute the command in the console's namespace
-            exec(cleaned_command, self.console.locals)
+            self.console.push(cleaned_command)
             sys.stdout = old_stdout
             return captured_output.getvalue()
         except Exception as e:
             sys.stdout = old_stdout
             return repr(e)
-
-    def validate_input(self, command: str):
-        if "print(" not in command:
-            raise MissingPrintStatementError(command)
 
 
 class REPLToolInput(BaseModel):
