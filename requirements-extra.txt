@@ -1,6 +1,6 @@
 motleycache
 lunary
 llama-index
-duckduckgo-search
+ddgs
 pglast
 ray[default]
