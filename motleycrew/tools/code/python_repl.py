@@ -1,3 +1,5 @@
+import functools
+import logging
 import re
 import sys
 from io import StringIO
@@ -6,6 +8,18 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from motleycrew.tools import MotleyTool
+
+logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(maxsize=None)
+def warn_once() -> None:
+    """Warn once about the dangers of PythonREPL with untrusted LLMs."""
+    logger.warning(
+        "Python REPL can execute arbitrary code from LLMs. "
+        "Only use with trusted models and in secure environments. "
+        "Consider using sandboxing or code review for production systems."
+    )
 
 
 class MissingPrintStatementError(Exception):
@@ -28,12 +42,14 @@ class PythonREPLTool(MotleyTool):
     def __init__(
         self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
     ):
+        # Warn about security risks with untrusted LLMs
+        warn_once()
+
         self.namespace: Dict = {}
         super().__init__(
             name="python_repl",
             description="A Python shell. Use this to execute python commands. Input should be a valid python command. "
-            "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`. "
-            "The state of the REPL is preserved between calls.",
+            "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`. ",
             return_direct=return_direct,
             exceptions_to_reflect=(exceptions_to_reflect or []) + [MissingPrintStatementError],
             args_schema=REPLToolInput,
