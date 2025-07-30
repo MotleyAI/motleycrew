@@ -1,8 +1,7 @@
-import code
 import re
 import sys
 from io import StringIO
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -29,14 +28,14 @@ class PythonREPLTool(MotleyTool):
     def __init__(
         self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
     ):
-        self.console = code.InteractiveConsole()
+        self.namespace: Dict = {}
         super().__init__(
             name="python_repl",
             description="A Python shell. Use this to execute python commands. Input should be a valid python command. "
             "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`. "
             "The state of the REPL is preserved between calls.",
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            exceptions_to_reflect=(exceptions_to_reflect or []) + [MissingPrintStatementError],
             args_schema=REPLToolInput,
         )
 
@@ -67,7 +66,9 @@ class PythonREPLTool(MotleyTool):
         sys.stdout = captured_output = StringIO()
 
         try:
-            self.console.runsource(cleaned_command, symbol="exec")
+            # Compile and execute the command to properly catch exceptions
+            compiled_code = compile(cleaned_command, "<string>", "exec")
+            exec(compiled_code, self.namespace)
             sys.stdout = old_stdout
             return captured_output.getvalue()
         except Exception as e:
