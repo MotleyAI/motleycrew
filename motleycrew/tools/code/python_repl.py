@@ -1,12 +1,35 @@
-import code
+import functools
+import logging
 import re
 import sys
 from io import StringIO
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 from motleycrew.tools import MotleyTool
+
+logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(maxsize=None)
+def warn_once() -> None:
+    """Warn once about the dangers of PythonREPL with untrusted LLMs."""
+    logger.warning(
+        "Python REPL can execute arbitrary code from LLMs. "
+        "Only use with trusted models and in secure environments. "
+        "Consider using sandboxing or code review for production systems."
+    )
+
+
+class MissingPrintStatementError(Exception):
+    """Exception raised when a print statement is missing from the command."""
+
+    def __init__(self, command: str):
+        self.command = command
+        super().__init__(
+            f"Command must contain at least one print statement. Remember to print the results you want to see using print(...)."
+        )
 
 
 class PythonREPLTool(MotleyTool):
@@ -19,14 +42,16 @@ class PythonREPLTool(MotleyTool):
     def __init__(
         self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
     ):
-        self.console = code.InteractiveConsole()
+        # Warn about security risks with untrusted LLMs
+        warn_once()
+
+        self.namespace: Dict = {}
         super().__init__(
             name="python_repl",
             description="A Python shell. Use this to execute python commands. Input should be a valid python command. "
-            "The output will be the content printed to stdout by the executed code. "
-            "The state of the REPL is preserved between calls.",
+            "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`. ",
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            exceptions_to_reflect=(exceptions_to_reflect or []) + [MissingPrintStatementError],
             args_schema=REPLToolInput,
         )
 
@@ -50,18 +75,25 @@ class PythonREPLTool(MotleyTool):
     def run(self, command: str) -> str:
         # Sanitize the input
         cleaned_command = self.sanitize_input(command)
+        self.validate_input(cleaned_command)
 
         # Capture stdout
         old_stdout = sys.stdout
         sys.stdout = captured_output = StringIO()
 
         try:
-            self.console.push(cleaned_command)
+            # Compile and execute the command to properly catch exceptions
+            compiled_code = compile(cleaned_command, "<string>", "exec")
+            exec(compiled_code, self.namespace)
             sys.stdout = old_stdout
             return captured_output.getvalue()
         except Exception as e:
             sys.stdout = old_stdout
             return repr(e)
+
+    def validate_input(self, command: str):
+        if "print(" not in command:
+            raise MissingPrintStatementError(command)
 
 
 class REPLToolInput(BaseModel):

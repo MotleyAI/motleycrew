@@ -11,5 +11,12 @@ class TestREPLTool:
 
     def test_repl_tool_multiple_calls(self):
         repl_tool = PythonREPLTool()
-        assert repl_tool.invoke({"command": "a = 1"}).strip() == ""
-        assert repl_tool.invoke({"command": "a"}).strip() == "1"
+        assert repl_tool.invoke({"command": "print(a := 1)"}).strip() == "1"
+        assert repl_tool.invoke({"command": "print(a)"}).strip() == "1"
+
+    def test_repl_tool_multiline_input_with_import(self):
+        repl_tool = PythonREPLTool()
+        command = """import math
+print(math.sqrt(16))
+"""
+        assert repl_tool.invoke({"command": command}).strip() == "4.0"
