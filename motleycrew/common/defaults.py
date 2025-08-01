@@ -14,7 +14,7 @@ class Defaults:
     MODULE_INSTALL_COMMANDS = {
         "crewai": "pip install crewai",
         "llama_index": "pip install llama-index",
-        "autogen": "pip install pyautogen",
+        "autogen": "pip install ag2",
         "lunary": "pip install lunary",
         "aider": "pip install aider-chat",
         "pglast": "pip install pglast",
