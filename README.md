@@ -1,7 +1,7 @@
 # motleycrew
 
 [![PyPI - Version](https://img.shields.io/pypi/v/motleycrew)](https://pypi.org/project/motleycrew/)
-[![CI](https://github.com/ShoggothAI/motleycrew/actions/workflows/build.yml/badge.svg)](https://github.com/ShoggothAI/motleycrew/actions/workflows/build.yml)
+[![CI](https://github.com/ShoggothAI/motleycrew/actions/workflows/ci.yml/badge.svg)](https://github.com/ShoggothAI/motleycrew/actions/workflows/ci.yml)
 
 [Website](https://motleycrew.ai) •︎ [Documentation](https://motleycrew.readthedocs.io)
 
@@ -55,7 +55,7 @@ print(write_task.output)
 print(illustrate_task.output)
 ```
 
-Here, we have a chain of two consecutive tasks. A SimpleTask basically just contains a prompt and an agent that will execute it. The `>>` operator is used to chain tasks together.  
+Here, we have a chain of two consecutive tasks. A SimpleTask basically just contains a prompt and an agent that will execute it. The `>>` operator is used to chain tasks together.
 If you want to learn more about creating flows in such fashion, see our [blog with images](https://motleycrew.readthedocs.io/en/latest/examples/blog_with_images.html) example.
 
 ### Knowledge graph and custom tasks
