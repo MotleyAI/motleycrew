@@ -38,13 +38,23 @@ which allow you to mix and match different agents together and easily provide th
 * :class:`motleycrew.agents.llama_index.LlamaIndexMotleyAgent`
 
 
-2025 update on CrewAI agents
-============================
+2025 update on CrewAI and LlamaIndex agents
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Lately, CrewAI has been increasingly complex and hard to integrate, as it's driving towards a more
 opinionated and closed environment.
 For this reason, we're deprecating the :class:`motleycrew.agents.crewai.CrewAIMotleyAgent`.
 Please use :class:`motleycrew.agents.langchain.ReActToolCallingMotleyAgent` instead.
+
+LlamaIndex has deprecated their AgentRunner in favor of Workflow-based agents,
+so we're deprecating :class:`motleycrew.agents.llama_index.LlamaIndexMotleyAgent` as well.
+
+We're still supporting tools from CrewAI and LlamaIndex, but we'll focus on delivering
+practical agents that are reliable and easy to use for most tasks.
+
+If you still want to integrate agents from CrewAI or LlamaIndex, or from any other framework,
+you can do so either by wrapping them in a `tool <quickstart.html#motleytool>`_,
+or by specifying them as `workers <key_concepts.html#tasks-task-units-and-workers>`_ in a task.
 
 
 Creating your own agent

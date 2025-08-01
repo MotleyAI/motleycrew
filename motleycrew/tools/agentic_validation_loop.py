@@ -1,8 +1,8 @@
-from typing import List, Optional, Any, Callable, Type, Dict
+from typing import Any, Callable, List, Optional, Type
 
-from pydantic import BaseModel, Field, create_model
 from langchain_core.prompts import PromptTemplate
 from langchain_core.prompts.base import BasePromptTemplate
+from pydantic import BaseModel, Field, create_model
 
 from motleycrew.agents.langchain import ReActToolCallingMotleyAgent
 from motleycrew.common import LLMFramework
@@ -69,7 +69,7 @@ class AgenticValidationLoop(MotleyTool):
             llm=self.llm,
             name=self.name + "_agent",
             force_output_handler=True,
-            prompt_prefix=prompt,
+            prompt=prompt,
         )
 
         # Run the agent with the prompt

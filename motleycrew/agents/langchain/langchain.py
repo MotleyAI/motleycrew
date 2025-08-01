@@ -26,7 +26,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
         self,
         description: str | None = None,
         name: str | None = None,
-        prompt_prefix: str | ChatPromptTemplate | None = None,
+        prompt: str | ChatPromptTemplate | None = None,
         agent_factory: MotleyAgentFactory[AgentExecutor] | None = None,
         tools: Sequence[MotleySupportedTool] | None = None,
         force_output_handler: bool = False,
@@ -49,8 +49,11 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
 
                 It is not included in the agent's prompt.
 
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
+            prompt: Prompt to the agent.
+
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
+                If a ChatPromptTemplate, it will be used as a prompt template.
 
             agent_factory: Factory function to create the agent.
                 The factory function should accept a dictionary of tools and return
@@ -81,7 +84,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
             verbose: Whether to log verbose output.
         """
         super().__init__(
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             description=description,
             name=name,
             agent_factory=agent_factory,
@@ -182,7 +185,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
 
     def invoke(
         self,
-        input: dict,
+        input: str | dict,
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
@@ -192,8 +195,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
         )
 
         output = self.agent.invoke({"input": prompt}, config, **kwargs)
-        output = output.get("output")
-        return output
+        return output.get("output") or output
 
     async def ainvoke(
         self,
@@ -203,18 +205,19 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
     ) -> Any:
         config = self._prepare_config(config)
         prompt = await asyncio.to_thread(
-            self._prepare_for_invocation, input=input, prompt_as_messages=self.input_as_messages
+            self._prepare_for_invocation,
+            input=input,
+            prompt_as_messages=self.input_as_messages,
         )
 
         output = await self.agent.ainvoke({"input": prompt}, config, **kwargs)
-        output = output.get("output")
-        return output
+        return output.get("output") or output
 
     @staticmethod
     def from_agent(
         agent: AgentExecutor,
         description: str | None = None,
-        prompt_prefix: str | None = None,
+        prompt: str | ChatPromptTemplate | None = None,
         tools: Sequence[MotleySupportedTool] | None = None,
         runnable_config: RunnableConfig | None = None,
         verbose: bool = False,
@@ -227,8 +230,11 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
         Args:
             agent: AgentExecutor instance to wrap.
 
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
+            prompt: Prompt for the agent.
+
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
+                If a ChatPromptTemplate, it will be used as a prompt template.
 
             description: Description of the agent.
 
@@ -251,7 +257,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
             tools = list(tools or []) + list(agent.tools or [])
 
         wrapped_agent = LangchainMotleyAgent(
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             description=description,
             tools=tools,
             runnable_config=runnable_config,

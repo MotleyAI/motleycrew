@@ -13,8 +13,8 @@ class ToolMock:
 
 @pytest.fixture
 def tools():
-    tool1 = MotleyTool(ToolMock())
-    tool2 = MotleyTool(ToolMock())
+    tool1 = MotleyTool(tool=ToolMock())
+    tool2 = MotleyTool(tool=ToolMock())
     return [tool1, tool2]
 
 

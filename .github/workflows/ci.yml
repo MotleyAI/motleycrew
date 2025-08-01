@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"  # integration tests at 2am UTC nightly
+
+
+
+# If another push to the same PR or branch happens while this workflow is still running,
+# cancel the earlier run in favor of the next run.
+#
+# There's no point in testing an outdated version of the code. GitHub only allows
+# a limited number of job runners to be active at the same time, so it's better to cancel
+# pointless jobs early so that more useful jobs can run sooner.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      id: setup-python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install poetry
+      run: pip install -U poetry
+
+    - name: Configure poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        poetry config installer.parallel true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install extra dependencies
+      run: poetry run pip install -r requirements-extra.txt
+
+    - name: Install dependencies
+      run: poetry install --no-interaction --all-extras --with dev
+
+    - name: Run tests
+      run: poetry run pytest --cov=motleycrew tests/
+
+  integration-test:
+    needs: test
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    environment: integration_test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install poetry
+        run: pip install -U poetry
+
+      - name: Configure poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          poetry config installer.parallel true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Load test cache
+        uses: actions/cache@v4
+        with:
+          path: tests/itest_cache
+          enableCrossOsArchive: true
+          key: integration-tests-cache
+          restore-keys: |
+            integration-tests-cache
+
+      - name: Install extra dependencies
+        run: poetry run pip install -r requirements-extra.txt
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --all-extras
+
+      - name: Run integration tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.openai-api-key }}
+          TIKTOKEN_CACHE_DIR: tests/itest_cache/tiktoken_cache
+        run: poetry run python tests/run_integration_tests.py
+
+  build:
+    needs: integration-test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      id: setup-python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+
+    - name: Install poetry
+      run: pip install -U poetry
+
+    - name: Configure poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        poetry config installer.parallel true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install project
+      run: poetry install --no-interaction --with dev --all-extras
+
+    - name: Run build
+      run: poetry build
+
+    - name: Install pandoc
+      working-directory: ./docs/source
+      run: poetry run python install_pandoc.py
+
+    - name: Run docs build
+      env:
+        TZ: UTC
+      working-directory: ./docs
+      run: poetry run make html

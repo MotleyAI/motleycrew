@@ -1,12 +1,11 @@
 from dotenv import load_dotenv
-
-from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_core.prompts.chat import ChatPromptTemplate
 
 from motleycrew import MotleyCrew, Task
 from motleycrew.agents.langchain.legacy_react import LegacyReActMotleyAgent
 from motleycrew.tools.llm_tool import LLMTool
+
 from .blog_post_input import text
 
 load_dotenv()
@@ -33,9 +32,9 @@ editor_prompt = ChatPromptTemplate.from_messages(
             content="You are an experienced online blog post editor with 10 years of experience."
         ),
         HumanMessage(
-            content="""Review the blog post draft below (delimited by triple backticks) 
-        and provide a critique and use specific examples from the text on what 
-    should be done to improve the draft, with data professionals as the intended audience. 
+            content="""Review the blog post draft below (delimited by triple backticks)
+        and provide a critique and use specific examples from the text on what
+    should be done to improve the draft, with data professionals as the intended audience.
     Also, suggest a catchy title for the story.
        ```{input}```
     """
@@ -50,14 +49,14 @@ illustrator_prompt = ChatPromptTemplate.from_messages(
             content="You are given the following draft story, delimited by triple back quotes: ```{second_draft}```"
         ),
         HumanMessage(
-            content="""Your task is to specify the illustrations that would fit this story. 
+            content="""Your task is to specify the illustrations that would fit this story.
     Make sure the illustrations are varied in style, eye-catching, and some of them humorous.
-    Describe each illustration in a way suitable for entering in a Midjourney prompt.  
-    Each description should be detailed and verbose. Don't explain the purpose of the illustrations, 
-    just describe in great 
+    Describe each illustration in a way suitable for entering in a Midjourney prompt.
+    Each description should be detailed and verbose. Don't explain the purpose of the illustrations,
+    just describe in great
     detail what each illustration should show, in a way suitable for a generative image prompt.
     There should be at most 5 and at least 3 illustrations.
-    Return the illustration descriptions as a list in the format 
+    Return the illustration descriptions as a list in the format
     ["...", "...", ..., "..."]
     """
         ),
@@ -67,12 +66,12 @@ illustrator_prompt = ChatPromptTemplate.from_messages(
 seo_prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
-            content="""Act as an SEO expert with 10 years of experience but ensure to 
+            content="""Act as an SEO expert with 10 years of experience but ensure to
             explain any SEO jargon for clarity when using it."""
         ),
         HumanMessage(
-            content="""Review the blog post below (delimited by triple back quotes) and provide specific 
-examples from the text where to optimize its SEO content. 
+            content="""Review the blog post below (delimited by triple back quotes) and provide specific
+examples from the text where to optimize its SEO content.
 Recommend SEO-friendly titles and subtitles that could be used.
 ```{second_draft}```
 """
@@ -102,7 +101,7 @@ seo_expert = LLMTool(
 
 
 writer = LegacyReActMotleyAgent(
-    prompt="You are a professional freelance copywriter with 10 years of experience.",
+    internal_prompt="You are a professional freelance copywriter with 10 years of experience.",
     tools=[editor, illustrator, seo_expert],
 )
 
@@ -116,16 +115,16 @@ task1 = Task(
             data professionals, avoid superlatives and an overly excitable tone.
             Don't discuss installation or testing.
             The summary will be provided in one or multiple chunks, followed by <END>.
-            
+
             Proceed as follows: first, write a draft blog post as described above.
             Then, submit it in turn to the editor, illustrator, and SEO expert for feedback.
-            In the case of the illustrator, insert the illustration descriptions it provides in 
+            In the case of the illustrator, insert the illustration descriptions it provides in
             square brackets into the appropriate places in the draft.
             In each case, revise the draft as per the response of the expert and submit it to the next expert.
-            
+
             After you have implemented each expert's recommendations, return the final draft in markdown format.
-            
-            Return the blog post in markdown format. 
+
+            Return the blog post in markdown format.
             Information begins: {text} <END>""",
     agent=writer,
 )
