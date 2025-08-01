@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Callable, Sequence
 
 from langchain.agents import AgentExecutor
@@ -45,7 +46,7 @@ def render_text_description(tools: list[BaseTool]) -> str:
     return "\n".join(tool_strings)
 
 
-def get_relevant_default_prompt(
+def get_relevant_internal_prompt(
     llm: BaseChatModel, force_output_handler: bool
 ) -> ChatPromptTemplate:
     if ChatAnthropic is not None and isinstance(llm, ChatAnthropic):
@@ -62,16 +63,16 @@ def get_relevant_default_prompt(
 def create_tool_calling_react_agent(
     llm: BaseChatModel,
     tools: Sequence[BaseTool],
-    prompt: ChatPromptTemplate,
+    internal_prompt: ChatPromptTemplate,
     output_handlers: Sequence[BaseTool],
     force_output_handler: bool,
     intermediate_steps_processor: Callable | None = None,
 ) -> Runnable:
-    prompt = prompt.partial(
+    internal_prompt = internal_prompt.partial(
         tools=render_text_description(list(tools)),
         output_handlers=render_text_description(output_handlers) if force_output_handler else "",
     )
-    check_variables(prompt)
+    check_variables(internal_prompt)
 
     tools_for_llm = list(tools)
     llm_with_tools = llm.bind_tools(tools=tools_for_llm)
@@ -86,7 +87,7 @@ def create_tool_calling_react_agent(
             ),
             additional_notes=lambda x: x.get("additional_notes") or [],
         )
-        | prompt
+        | internal_prompt
         | RunnableLambda(print_passthrough)
         | llm_with_tools
         | ToolsAgentOutputParser()
@@ -107,25 +108,28 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
         tools: Sequence[MotleySupportedTool],
         description: str | None = None,
         name: str | None = None,
-        prompt_prefix: str | ChatPromptTemplate | None = None,
-        prompt: ChatPromptTemplate | None = None,
+        prompt: str | ChatPromptTemplate | None = None,
         chat_history: bool | GetSessionHistoryCallable = True,
         force_output_handler: bool = False,
         handle_parsing_errors: bool = False,
         llm: BaseChatModel | None = None,
         max_iterations: int | None = Defaults.DEFAULT_REACT_AGENT_MAX_ITERATIONS,
+        internal_prompt: ChatPromptTemplate | None = None,
         intermediate_steps_processor: Callable | None = None,
         runnable_config: RunnableConfig | None = None,
         verbose: bool = False,
+        prompt_prefix: str | None = None,
     ):
         """
         Args:
             tools: Tools to add to the agent.
             description: Description of the agent.
             name: Name of the agent.
-            prompt_prefix: Prefix to the agent's prompt.
-            prompt: The prompt to use.
-                See Prompt section below for more on the expected input variables.
+            prompt: Prompt for the agent.
+
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
+                If a ChatPromptTemplate, it will be used as a prompt template.
             chat_history: Whether to use chat history or not.
                 If `True`, uses `InMemoryChatMessageHistory`.
                 If a callable is passed, it is used to get the chat history by session_id.
@@ -139,28 +143,55 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
                 are set to True.
             llm: Language model to use.
             max_iterations: The maximum number of agent iterations.
+            internal_prompt: The internal ReAct prompt to use.
+                See Internal prompt section below for more on the expected input variables.
             intermediate_steps_processor: Function that modifies the intermediate steps array
                 in some way before each agent iteration.
             runnable_config: Default Langchain config to use when invoking the agent.
                 It can be used to add callbacks, metadata, etc.
             verbose: Whether to log verbose output.
+            prompt_prefix: Deprecated. Please use the prompt argument instead.
 
-        Prompt:
-            The prompt must have `agent_scratchpad`, `chat_history`, and `additional_notes`
-            ``MessagesPlaceholder``s.
-            If a prompt is not passed in, the default one is used.
+        Internal prompt:
+            Not to be confused with the `prompt` argument, which is user-facing
+            and is the recommended way to explain the task to the agent.
+
+            The internal (system) prompt contains the explanations for the low-level
+            ReAct agent behavior (tool calling, reasoning, etc). Only modify this if
+            you know what you are doing.
+
+            The internal prompt must have `agent_scratchpad`, `chat_history`, and
+            `additional_notes` ``MessagesPlaceholder``s.
 
             The default prompt slightly varies depending on the language model used.
             See :mod:`motleycrew.agents.langchain.tool_calling_react_prompts` for more details.
         """
+        if prompt_prefix is not None:
+            warnings.warn(
+                "prompt_prefix is deprecated and will be removed in the future. "
+                "Please use the prompt argument instead.",
+                DeprecationWarning,
+            )
+
+            if prompt is not None:
+                raise ValueError(
+                    "`prompt_prefix` is deprecated; `prompt` argument is what you should use now, "
+                    "optionally with a `{prompt}` placeholder. To customize the internal prompt, "
+                    "use the `internal_prompt` argument."
+                )
+
+            prompt = prompt_prefix + "\n\n{prompt}"
+
         if llm is None:
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
 
         if not tools:
             raise ValueError("You must provide at least one tool to the ReActToolCallingAgent")
 
-        if prompt is None:
-            prompt = get_relevant_default_prompt(llm=llm, force_output_handler=force_output_handler)
+        if internal_prompt is None:
+            internal_prompt = get_relevant_internal_prompt(
+                llm=llm, force_output_handler=force_output_handler
+            )
 
         def agent_factory(tools: dict[str, MotleyTool]) -> AgentExecutor:
             output_handlers_for_langchain = [
@@ -171,7 +202,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
             agent = create_tool_calling_react_agent(
                 llm=llm,
                 tools=tools_for_langchain,
-                prompt=prompt,
+                internal_prompt=internal_prompt,
                 output_handlers=output_handlers_for_langchain,
                 force_output_handler=force_output_handler,
                 intermediate_steps_processor=intermediate_steps_processor,
@@ -187,7 +218,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
             return agent_executor
 
         super().__init__(
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             description=description,
             name=name,
             agent_factory=agent_factory,

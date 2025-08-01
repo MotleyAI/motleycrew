@@ -16,10 +16,9 @@ from nbformat.v4.nbbase import new_code_cell
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)  # ensure the examples are importable
 
-from motleycrew.common import logger, configure_logging
+from motleycrew.common import configure_logging, logger
 from motleycrew.common.exceptions import (
     IntegrationTestException,
-    IpynbIntegrationTestResultNotFound,
 )
 
 INTEGRATION_TESTS = {}
@@ -112,31 +111,10 @@ def run_ipynb(ipynb_path: str, strong_cache: bool = False, cache_sub_dir: str = 
         ]
         for cell in reversed(cells):
             nb.cells.insert(0, cell)
-
-        # ipynb save final result
-        # final_result variable must be present in ipynb and store the result of the execution as a string
-        ipynb_result_file_path = os.path.join(cache_sub_dir, "ipynb_result.txt")
-        save_result_command = "with open(r'{}', 'w') as f:\n\tf.write(final_result)".format(
-            ipynb_result_file_path
-        )
-        cells = [new_code_cell(save_result_command), new_code_cell("disable_cache()")]
-        nb.cells += cells
-    else:
-        ipynb_result_file_path = None
+        nb.cells += [new_code_cell("disable_cache()")]
 
     ep = ExecutePreprocessor(kernel_name="python3")
     ep.preprocess(nb)
-
-    # create result
-    if ipynb_result_file_path is not None:
-        if os.path.exists(ipynb_result_file_path):
-            with open(ipynb_result_file_path) as f:
-                result = f.read()
-            os.remove(ipynb_result_file_path)
-        else:
-            raise IpynbIntegrationTestResultNotFound(ipynb_path, ipynb_result_file_path)
-    else:
-        result = ""
 
     return nbformat.writes(nb)
 

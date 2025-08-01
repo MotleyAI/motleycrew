@@ -15,6 +15,7 @@ except ImportError:
     TaskStepOutput = None
     AgentChatResponse = None
 
+from deprecated import deprecated
 from langchain_core.runnables import RunnableConfig
 
 from motleycrew.agents.parent import MotleyAgentParent
@@ -23,12 +24,13 @@ from motleycrew.common.utils import ensure_module_is_installed
 from motleycrew.tools import DirectOutput
 
 
+@deprecated("LlamaIndexMotleyAgent is deprecated and will be removed in the next major release.")
 class LlamaIndexMotleyAgent(MotleyAgentParent):
     """MotleyCrew wrapper for LlamaIndex agents."""
 
     def __init__(
         self,
-        prompt_prefix: str | None = None,
+        prompt: str | None = None,
         description: str | None = None,
         name: str | None = None,
         agent_factory: MotleyAgentFactory[AgentRunner] | None = None,
@@ -38,8 +40,10 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
     ):
         """
         Args:
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
+            prompt: Prompt for the agent.
+
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
 
             description: Description of the agent.
 
@@ -73,7 +77,7 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
         """
         super().__init__(
             description=description,
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             name=name,
             agent_factory=agent_factory,
             tools=tools,
@@ -155,7 +159,7 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
-        prompt = self._prepare_for_invocation(input=input)
+        prompt = self._prepare_for_invocation(input=input, prompt_as_messages=False)
 
         output = self.agent.chat(prompt)
 
@@ -170,7 +174,9 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
-        prompt = await asyncio.to_thread(self._prepare_for_invocation, input=input)
+        prompt = await asyncio.to_thread(
+            self._prepare_for_invocation, input=input, prompt_as_messages=False
+        )
 
         output = await self.agent.achat(prompt)
 
@@ -183,7 +189,7 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
     def from_agent(
         agent: AgentRunner,
         description: Optional[str] = None,
-        prompt_prefix: Optional[str] = None,
+        prompt: Optional[str] = None,
         tools: Sequence[MotleySupportedTool] | None = None,
         verbose: bool = False,
     ) -> "LlamaIndexMotleyAgent":
@@ -196,8 +202,10 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
         Args:
             agent: AgentRunner instance to wrap.
 
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
+            prompt: Prompt for the agent.
+
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
 
             description: Description of the agent.
 
@@ -211,7 +219,7 @@ class LlamaIndexMotleyAgent(MotleyAgentParent):
         """
         ensure_module_is_installed("llama_index")
         wrapped_agent = LlamaIndexMotleyAgent(
-            description=description, prompt_prefix=prompt_prefix, tools=tools, verbose=verbose
+            description=description, prompt=prompt, tools=tools, verbose=verbose
         )
         wrapped_agent._agent = agent
         return wrapped_agent

@@ -48,10 +48,10 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
         tools: Sequence[MotleySupportedTool],
         description: str | None = None,
         name: str | None = None,
-        prompt_prefix: str | None = None,
+        prompt: str | None = None,
         chat_history: bool | GetSessionHistoryCallable = True,
         force_output_handler: bool = False,
-        prompt: str | None = None,
+        internal_prompt: str | None = None,
         handle_parsing_errors: bool = True,
         handle_tool_errors: bool = True,
         llm: BaseLanguageModel | None = None,
@@ -63,11 +63,12 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
             tools: Tools to add to the agent.
             description: Description of the agent.
             name: Name of the agent.
-            prompt_prefix: Prefix to the agent's prompt.
-            output_handler: Output handler for the agent.
+            prompt: Prompt for the agent.
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
             chat_history: Whether to use chat history or not.
             force_output_handler: Whether to force the agent to return through an output handler.
-            prompt: Custom prompt to use with the agent.
+            internal_prompt: Internal prompt to use with the agent.
             handle_parsing_errors: Whether to handle parsing errors.
             handle_tool_errors: Whether to handle tool errors.
             llm: Language model to use.
@@ -78,8 +79,8 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
         if force_output_handler:
             raise Exception("Forced output handler is not supported with legacy ReAct agent.")
 
-        if prompt is None:
-            prompt = DEFAULT_REACT_PROMPT
+        if internal_prompt is None:
+            internal_prompt = DEFAULT_REACT_PROMPT
 
         if llm is None:
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
@@ -99,7 +100,7 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
                     tool.handle_tool_error = True
                     tool.handle_validation_error = True
 
-            agent = create_react_agent(llm=llm, tools=langchain_tools, prompt=prompt)
+            agent = create_react_agent(llm=llm, tools=langchain_tools, prompt=internal_prompt)
             agent_executor = AgentExecutor(
                 agent=agent,
                 tools=langchain_tools,
@@ -109,7 +110,7 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
             return agent_executor
 
         super().__init__(
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             description=description,
             name=name,
             agent_factory=agent_factory,

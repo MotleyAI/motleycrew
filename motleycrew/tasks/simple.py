@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Sequence
 
 from langchain_core.prompts import PromptTemplate
 
