@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 from motleycrew.common.utils import ensure_module_is_installed
 
@@ -106,7 +106,7 @@ class HTMLRenderTool(MotleyTool):
         headless: bool = True,
         window_size: Optional[Tuple[int, int]] = None,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
     ):
         """
         Args:
@@ -123,7 +123,7 @@ class HTMLRenderTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 

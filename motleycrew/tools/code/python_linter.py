@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Type, Union
 
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -19,7 +19,7 @@ class PythonLinterTool(MotleyTool):
     def __init__(
         self,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
     ):
         ensure_module_is_installed("aider")
 
@@ -27,7 +27,7 @@ class PythonLinterTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 

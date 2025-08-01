@@ -3,7 +3,7 @@ import logging
 import re
 import sys
 from io import StringIO
-from typing import Dict, List, Optional
+from typing import Dict, List, Type
 
 from pydantic import BaseModel, Field
 
@@ -40,18 +40,24 @@ class PythonREPLTool(MotleyTool):
     """
 
     def __init__(
-        self, return_direct: bool = False, exceptions_to_reflect: Optional[List[Exception]] = None
+        self, return_direct: bool = False, handle_exceptions: bool | List[Type[Exception]] = False
     ):
         # Warn about security risks with untrusted LLMs
         warn_once()
 
         self.namespace: Dict = {}
+
+        if not handle_exceptions:
+            handle_exceptions = [MissingPrintStatementError]
+        elif MissingPrintStatementError not in handle_exceptions:
+            handle_exceptions.append(MissingPrintStatementError)
+
         super().__init__(
             name="python_repl",
             description="A Python shell. Use this to execute python commands. Input should be a valid python command. "
             "MAKE SURE TO PRINT OUT THE RESULTS YOU CARE ABOUT USING `print(...)`. ",
             return_direct=return_direct,
-            exceptions_to_reflect=(exceptions_to_reflect or []) + [MissingPrintStatementError],
+            handle_exceptions=handle_exceptions,
             args_schema=REPLToolInput,
         )
 

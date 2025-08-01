@@ -72,7 +72,7 @@ class MotleyTool(Runnable):
         description: Optional[str] = None,
         args_schema: Optional[Type[BaseModel]] = None,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Type[Exception]]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
         tool: Optional[BaseTool] = None,
     ):
@@ -83,7 +83,16 @@ class MotleyTool(Runnable):
             description: Description of the tool (required if tool is None).
             args_schema: Schema of the tool arguments (required if tool is None).
             return_direct: If True, the tool's output will be returned directly to the user.
-            exceptions_to_reflect: List of exceptions to reflect back to the agent.
+            handle_exceptions: Whether to handle exceptions (return their message as output).
+
+                If True, the tool will return any raised exception's message as its output.
+
+                If a list of exceptions is provided, only these exceptions will be handled.
+
+                If False, the tool will raise the exception.
+
+                If return_direct is True, the tool will always handle InvalidOutput exceptions,
+                as the tool is considered an output handler.
             retry_config: Configuration for retry behavior. If None, exceptions will not be retried.
             tool: Langchain BaseTool to wrap. Usually not needed, as the tool is created from the run method.
         """
@@ -96,15 +105,24 @@ class MotleyTool(Runnable):
         else:
             self.tool = tool
 
-        # To reflect errors back to the LLM
+        # To return errors back to the LLM
         # TODO: a param to disable/customize this?
         self.tool.handle_validation_error = self._format_error
         self.tool.handle_tool_error = self._format_error
 
         self.return_direct = return_direct
-        self.exceptions_to_reflect = exceptions_to_reflect or []
-        if InvalidOutput not in self.exceptions_to_reflect:
-            self.exceptions_to_reflect = [InvalidOutput, *self.exceptions_to_reflect]
+
+        if handle_exceptions is True:
+            exceptions_to_handle = [Exception]
+        elif isinstance(handle_exceptions, list):
+            exceptions_to_handle = handle_exceptions
+        else:
+            exceptions_to_handle = []
+
+        if self.return_direct and InvalidOutput not in exceptions_to_handle:
+            exceptions_to_handle = [InvalidOutput, *exceptions_to_handle]
+
+        self.exceptions_to_handle = exceptions_to_handle
 
         self.retry_config = retry_config or RetryConfig(max_retries=0, exceptions_to_retry=())
 
@@ -142,7 +160,7 @@ class MotleyTool(Runnable):
         return getattr(self.tool, "coroutine", None) is not None
 
     def _patch_tool_run(self):
-        """Patch the tool run method to implement retry logic and reflect exceptions."""
+        """Patch the tool run method to implement retry logic and handle exceptions."""
 
         original_run = self.tool._run
         signature = inspect.signature(original_run)
@@ -163,15 +181,19 @@ class MotleyTool(Runnable):
                         e, self.retry_config.exceptions_to_retry
                     ):
                         logger.info(
-                            f"Retry {attempt + 1} of {self.retry_config.max_retries} in tool {self.name}: {e_repr}"
+                            "Retry %d of %d in tool %s: %s",
+                            attempt + 1,
+                            self.retry_config.max_retries,
+                            self.name,
+                            e_repr,
                         )
                         sleep(
                             self.retry_config.wait_time
                             * (self.retry_config.backoff_factor**attempt)
                         )
                     else:
-                        if any(isinstance(e, exc_type) for exc_type in self.exceptions_to_reflect):
-                            logger.info(f"Reflecting exception in tool {self.name}: {e_repr}")
+                        if any(isinstance(e, exc_type) for exc_type in self.exceptions_to_handle):
+                            logger.info("Handling exception in tool %s: %s", self.name, e_repr)
                             return e_repr
                         raise e
 
@@ -179,7 +201,7 @@ class MotleyTool(Runnable):
         object.__setattr__(self.tool, "_run", patched_run)
 
     def _patch_tool_arun(self):
-        """Patch the tool arun method to implement retry logic and reflect exceptions."""
+        """Patch the tool arun method to implement retry logic and handle exceptions."""
         original_arun = self.tool._arun
         signature = inspect.signature(original_arun)
 
@@ -199,15 +221,19 @@ class MotleyTool(Runnable):
                         e, self.retry_config.exceptions_to_retry
                     ):
                         logger.info(
-                            f"Retry {attempt + 1} of {self.retry_config.max_retries} in tool {self.name}: {e_repr}"
+                            "Retry %d of %d in tool %s: %s",
+                            attempt + 1,
+                            self.retry_config.max_retries,
+                            self.name,
+                            e_repr,
                         )
                         await asyncio.sleep(
                             self.retry_config.wait_time
                             * (self.retry_config.backoff_factor**attempt)
                         )
                     else:
-                        if any(isinstance(e, exc_type) for exc_type in self.exceptions_to_reflect):
-                            logger.info(f"Reflecting exception in tool {self.name}: {e_repr}")
+                        if any(isinstance(e, exc_type) for exc_type in self.exceptions_to_handle):
+                            logger.info("Handling exception in tool %s: %s", self.name, e_repr)
                             return e_repr
                         raise e
 
@@ -281,13 +307,13 @@ class MotleyTool(Runnable):
     def from_langchain_tool(
         langchain_tool: BaseTool,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
     ) -> "MotleyTool":
         return MotleyTool(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
             retry_config=retry_config,
         )
 
@@ -295,7 +321,7 @@ class MotleyTool(Runnable):
     def from_llama_index_tool(
         llama_index_tool: LlamaIndex__BaseTool,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
     ) -> "MotleyTool":
         """Create a MotleyTool from a LlamaIndex tool.
@@ -303,7 +329,7 @@ class MotleyTool(Runnable):
         Args:
             llama_index_tool: LlamaIndex tool to convert.
             return_direct: If True, the tool's output will be returned directly to the user.
-            exceptions_to_reflect: List of exceptions to reflect back to the agent.
+            handle_exceptions: Whether to handle exceptions (return their message as output).
             retry_config: Configuration for retry behavior. If None, exceptions will not be retried.
 
         Returns:
@@ -322,7 +348,7 @@ class MotleyTool(Runnable):
         return MotleyTool.from_langchain_tool(
             langchain_tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
             retry_config=retry_config,
         )
 
@@ -330,7 +356,7 @@ class MotleyTool(Runnable):
     def from_crewai_tool(
         crewai_tool: CrewAI__BaseTool,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
     ) -> "MotleyTool":
         """Create a MotleyTool from a CrewAI tool.
@@ -338,7 +364,7 @@ class MotleyTool(Runnable):
         Args:
             crewai_tool: CrewAI tool to convert.
             return_direct: If True, the tool's output will be returned directly to the user.
-            exceptions_to_reflect: List of exceptions to reflect back to the agent.
+            handle_exceptions: Whether to handle exceptions (return their message as output).
             retry_config: Configuration for retry behavior. If None, exceptions will not be retried.
 
         Returns:
@@ -354,7 +380,7 @@ class MotleyTool(Runnable):
         return MotleyTool.from_langchain_tool(
             langchain_tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
             retry_config=retry_config,
         )
 
@@ -362,7 +388,7 @@ class MotleyTool(Runnable):
     def from_motley_agent(
         agent: MotleyAgentAbstractParent,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
     ) -> "MotleyTool":
         """Convert an agent to a tool to be used by other agents via delegation.
@@ -370,7 +396,7 @@ class MotleyTool(Runnable):
         Args:
             agent: The MotleyAgent to convert to a tool.
             return_direct: If True, the tool's output will be returned directly to the user.
-            exceptions_to_reflect: List of exceptions to reflect back to the agent.
+            handle_exceptions: Whether to handle exceptions (return their message as output).
             retry_config: Configuration for retry behavior. If None, exceptions will not be retried.
 
         Returns:
@@ -379,7 +405,7 @@ class MotleyTool(Runnable):
 
         return agent.as_tool(
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
             retry_config=retry_config,
         )
 
@@ -387,7 +413,7 @@ class MotleyTool(Runnable):
     def from_supported_tool(
         tool: MotleySupportedTool,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         retry_config: Optional[RetryConfig] = None,
     ) -> "MotleyTool":
         """Create a MotleyTool from any supported tool type.
@@ -397,7 +423,7 @@ class MotleyTool(Runnable):
                 Currently, we support tools from Langchain, LlamaIndex,
                 as well as motleycrew agents.
             return_direct: If True, the tool's output will be returned directly to the user.
-            exceptions_to_reflect: List of exceptions to reflect back to the agent.
+            handle_exceptions: Whether to handle exceptions (return their message as output).
             retry_config: Configuration for retry behavior. If None, exceptions will not be retried.
         Returns:
             MotleyTool instance.
@@ -408,28 +434,28 @@ class MotleyTool(Runnable):
             return MotleyTool.from_langchain_tool(
                 tool,
                 return_direct=return_direct,
-                exceptions_to_reflect=exceptions_to_reflect,
+                handle_exceptions=handle_exceptions,
                 retry_config=retry_config,
             )
         elif isinstance(tool, LlamaIndex__BaseTool):
             return MotleyTool.from_llama_index_tool(
                 tool,
                 return_direct=return_direct,
-                exceptions_to_reflect=exceptions_to_reflect,
+                handle_exceptions=handle_exceptions,
                 retry_config=retry_config,
             )
         elif isinstance(tool, MotleyAgentAbstractParent):
             return MotleyTool.from_motley_agent(
                 tool,
                 return_direct=return_direct,
-                exceptions_to_reflect=exceptions_to_reflect,
+                handle_exceptions=handle_exceptions,
                 retry_config=retry_config,
             )
         elif CrewAI__BaseTool is not None and isinstance(tool, CrewAI__BaseTool):
             return MotleyTool.from_crewai_tool(
                 tool,
                 return_direct=return_direct,
-                exceptions_to_reflect=exceptions_to_reflect,
+                handle_exceptions=handle_exceptions,
                 retry_config=retry_config,
             )
         else:

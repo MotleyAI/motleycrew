@@ -61,7 +61,7 @@ class AgenticValidationLoop(MotleyTool):
         output_tool = StructuredPassthroughTool(
             schema=self.schema,
             post_process=self.post_process,
-            exceptions_to_reflect=[Exception],
+            handle_exceptions=True,
         )
 
         agent = ReActToolCallingMotleyAgent(

@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from langchain_core.tools import StructuredTool
 from llama_index.core import (
@@ -8,8 +8,8 @@ from llama_index.core import (
     VectorStoreIndex,
     load_index_from_storage,
 )
-from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.embeddings import BaseEmbedding
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pydantic import BaseModel, Field
 
@@ -26,7 +26,7 @@ class SimpleRetrieverTool(MotleyTool):
         persist_dir: str,
         return_strings_only: bool = False,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         embeddings: Optional[BaseEmbedding] = None,
     ):
         """
@@ -39,7 +39,7 @@ class SimpleRetrieverTool(MotleyTool):
             data_dir, persist_dir, return_strings_only=return_strings_only, embeddings=embeddings
         )
         super().__init__(
-            tool=tool, return_direct=return_direct, exceptions_to_reflect=exceptions_to_reflect
+            tool=tool, return_direct=return_direct, handle_exceptions=handle_exceptions
         )
 
 

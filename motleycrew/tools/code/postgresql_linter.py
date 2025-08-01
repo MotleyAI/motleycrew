@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Type
 
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
@@ -21,7 +21,7 @@ class PostgreSQLLinterTool(MotleyTool):
     def __init__(
         self,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
     ):
         ensure_module_is_installed("pglast")
 
@@ -29,7 +29,7 @@ class PostgreSQLLinterTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 
