@@ -185,7 +185,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
 
     def invoke(
         self,
-        input: str | dict,
+        input: Optional[str | dict] = None,
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
@@ -199,7 +199,7 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
 
     async def ainvoke(
         self,
-        input: dict,
+        input: Optional[str | dict] = None,
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
