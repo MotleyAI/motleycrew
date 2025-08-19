@@ -4,18 +4,17 @@ from typing import Sequence
 
 try:
     from llama_index.core.agent import ReActAgent
-    from llama_index.core.llms import LLM
     from llama_index.core.callbacks import CallbackManager
+    from llama_index.core.llms import LLM
 except ImportError:
     LLM = object
 
 from motleycrew.agents.llama_index import LlamaIndexMotleyAgent
-from motleycrew.tools import MotleyTool
-from motleycrew.common import MotleySupportedTool
-from motleycrew.common import LLMFramework
+from motleycrew.common import LLMFramework, MotleySupportedTool
 from motleycrew.common.llms import init_llm
-from motleycrew.tracking import get_default_callbacks_list
 from motleycrew.common.utils import ensure_module_is_installed
+from motleycrew.tools import MotleyTool
+from motleycrew.tracking import get_default_callbacks_list
 
 
 class ReActLlamaIndexMotleyAgent(LlamaIndexMotleyAgent):
@@ -23,7 +22,7 @@ class ReActLlamaIndexMotleyAgent(LlamaIndexMotleyAgent):
 
     def __init__(
         self,
-        prompt_prefix: str | None = None,
+        prompt: str | None = None,
         description: str | None = None,
         name: str | None = None,
         tools: Sequence[MotleySupportedTool] | None = None,
@@ -34,8 +33,9 @@ class ReActLlamaIndexMotleyAgent(LlamaIndexMotleyAgent):
     ):
         """
         Args:
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
+            prompt: Prompt for the agent.
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
 
             description: Description of the agent.
 
@@ -78,7 +78,7 @@ class ReActLlamaIndexMotleyAgent(LlamaIndexMotleyAgent):
             return agent
 
         super().__init__(
-            prompt_prefix=prompt_prefix,
+            prompt=prompt,
             description=description,
             name=name,
             agent_factory=agent_factory,

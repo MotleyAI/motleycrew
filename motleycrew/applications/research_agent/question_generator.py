@@ -60,7 +60,7 @@ class QuestionGeneratorTool(MotleyTool):
             prompt=prompt,
         )
 
-        super().__init__(langchain_tool)
+        super().__init__(tool=langchain_tool)
 
 
 class QuestionGeneratorToolInput(BaseModel, arbitrary_types_allowed=True):

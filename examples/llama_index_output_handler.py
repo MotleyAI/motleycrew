@@ -1,13 +1,11 @@
 from dotenv import load_dotenv
 from langchain_community.tools import DuckDuckGoSearchRun
 
-
 from motleycrew import MotleyCrew
 from motleycrew.agents.llama_index import ReActLlamaIndexMotleyAgent
-from motleycrew.common import configure_logging
-from motleycrew.tasks import SimpleTask
+from motleycrew.common import AsyncBackend, configure_logging
 from motleycrew.common.exceptions import InvalidOutput
-from motleycrew.common import AsyncBackend
+from motleycrew.tasks import SimpleTask
 from motleycrew.tools import MotleyTool
 
 
@@ -28,7 +26,7 @@ def main():
 
     # TODO: add LlamaIndex native tools
     researcher = ReActLlamaIndexMotleyAgent(
-        prompt_prefix="Your goal is to uncover cutting-edge developments in AI and data science",
+        prompt="Your goal is to uncover cutting-edge developments in AI and data science",
         tools=[search_tool, output_handler],
         force_output_handler=True,
         verbose=True,

@@ -447,9 +447,9 @@ class MotleyKuzuGraphStore(MotleyGraphStore):
 
         existing_property_names = self._get_node_property_names(node.get_label())
 
-        assert property_name in node.model_fields, "No such field in node model {}: {}".format(
-            node.__class__.__name__, property_name
-        )
+        assert (
+            property_name in node.__class__.model_fields
+        ), "No such field in node model {}: {}".format(node.__class__.__name__, property_name)
 
         assert self.check_node_exists(node)
         assert property_name in existing_property_names, "No such field in DB table {}: {}".format(
@@ -457,7 +457,7 @@ class MotleyKuzuGraphStore(MotleyGraphStore):
         )
 
         _, is_json = MotleyKuzuGraphStore._get_cypher_type_and_is_json_by_python_type_annotation(
-            node.model_fields[property_name].annotation
+            node.__class__.model_fields[property_name].annotation
         )
 
         db_property_name = property_name
@@ -578,7 +578,7 @@ class MotleyKuzuGraphStore(MotleyGraphStore):
 
             _, is_json = (
                 MotleyKuzuGraphStore._get_cypher_type_and_is_json_by_python_type_annotation(
-                    node.model_fields[field_name].annotation
+                    node.__class__.model_fields[field_name].annotation
                 )
             )
             if is_json and value is not None:

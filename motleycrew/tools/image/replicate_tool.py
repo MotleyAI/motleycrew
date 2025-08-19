@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from langchain.agents import Tool
 from pydantic import BaseModel, Field
@@ -61,7 +61,7 @@ class ReplicateImageGeneratorTool(MotleyTool):
         model_name: str,
         images_directory: Optional[str] = None,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
         **kwargs,
     ):
         """
@@ -81,7 +81,7 @@ class ReplicateImageGeneratorTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 
@@ -107,6 +107,7 @@ def create_replicate_image_generator_langchain_tool(
 
 if __name__ == "__main__":
     import os
+
     image_dir = os.path.join(os.path.expanduser("~"), "images")
     tool = ReplicateImageGeneratorTool("flux-pro", image_dir, aspect_ratio="3:2")
     output = tool.invoke(

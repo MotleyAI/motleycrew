@@ -86,10 +86,8 @@ class TestMotleyTool:
 
         assert e.value.output == mock_input.get("mock_input")
 
-    def test_tool_reflect_exception(self, langchain_tool, mock_input):
-        motley_tool = MotleyTool.from_supported_tool(
-            langchain_tool, exceptions_to_reflect=[ValueError]
-        )
+    def test_tool_handle_exception(self, langchain_tool, mock_input):
+        motley_tool = MotleyTool.from_supported_tool(langchain_tool, handle_exceptions=[ValueError])
         output = motley_tool.invoke({"mock_input": "raise"})
         assert output == "ValueError: test"
 

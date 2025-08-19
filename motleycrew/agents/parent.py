@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 from langchain_core.messages import BaseMessage
-from langchain_core.prompts.chat import ChatPromptTemplate, HumanMessage, SystemMessage
+from langchain_core.prompts.chat import ChatPromptTemplate, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -35,7 +35,7 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
 
     def __init__(
         self,
-        prompt_prefix: str | ChatPromptTemplate | None = None,
+        prompt: str | ChatPromptTemplate | None = None,
         description: str | None = None,
         name: str | None = None,
         agent_factory: MotleyAgentFactory | None = None,
@@ -45,19 +45,24 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
     ):
         """
         Args:
-            prompt_prefix: Prefix to the agent's prompt.
-                Can be used for providing additional context, such as the agent's role or backstory.
-            description: Description of the agent.
+            prompt: Prompt for the agent.
 
-                Unlike the prompt prefix, it is not included in the prompt.
+                If a string, it will be used as a prompt.
+                If a string containing f-string-style placeholders, it will be used as a prompt template.
+                If a ChatPromptTemplate, it will be used as a prompt template.
+            description: Description of the agent.
                 The description is only used for describing the agent's purpose
                 when giving it as a tool to other agents.
+
+                It is NOT included in the agent's prompt.
             name: Name of the agent.
+
                 The name is used for identifying the agent when it is given as a tool
                 to other agents, as well as for logging purposes.
 
-                It is not included in the agent's prompt.
+                It is NOT included in the agent's prompt.
             agent_factory: Factory function to create the agent.
+
                 The factory function should accept a dictionary of tools and return the agent.
                 It is usually called right before the agent is invoked for the first time.
 
@@ -69,7 +74,7 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         """
         self.name = name or description
         self.description = description  # becomes tool description
-        self.prompt_prefix = prompt_prefix
+        self.prompt = prompt
         self.agent_factory = agent_factory
         self.tools: dict[str, MotleyTool] = {}
         self.force_output_handler = force_output_handler
@@ -95,52 +100,54 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         return self.__repr__()
 
     def compose_prompt(
-        self, input_dict: dict, prompt: ChatPromptTemplate | str, as_messages: bool = False
+        self, input: str | dict | None = None, as_messages: bool = False
     ) -> Union[str, list[BaseMessage]]:
         """Compose the agent's prompt from the prompt prefix and the provided prompt.
 
         Args:
-            input_dict: The input dictionary to the agent.
-            prompt: The prompt to be added to the agent's prompt.
+            input: The input to the agent.
             as_messages: Whether the prompt should be returned as a Langchain messages list instead of a single string.
 
         Returns:
             The composed prompt.
         """
-        # TODO: always cast description and prompt to ChatPromptTemplate first?
-        prompt_messages = []
-
-        if not self.prompt_prefix and not prompt:
-            raise Exception("Cannot compose agent prompt without description or prompt")
-
-        if self.prompt_prefix:
-            if isinstance(self.prompt_prefix, ChatPromptTemplate):
-                prompt_messages += self.prompt_prefix.invoke(input_dict).to_messages()
-
-            elif isinstance(self.prompt_prefix, str):
-                prompt_messages.append(
-                    SystemMessage(content=self.prompt_prefix.format(**input_dict))
+        if self.prompt:
+            if isinstance(input, str):
+                raise ValueError(
+                    "Input must be a dictionary when using a prompt template with the agent"
                 )
+            elif input is None:
+                input = {}
+
+            if isinstance(self.prompt, ChatPromptTemplate):
+                prepared_prompt = self.prompt.invoke(input).to_messages()
+
+            elif isinstance(self.prompt, str):
+                prepared_prompt = [HumanMessage(content=self.prompt.format(**input))]
 
             else:
-                raise ValueError("Agent description must be a string or a ChatPromptTemplate")
+                raise ValueError("Agent prompt must be a string or a ChatPromptTemplate")
 
-        if prompt:
-            if isinstance(prompt, ChatPromptTemplate):
-                prompt_messages += prompt.invoke(input_dict).to_messages()
-
-            elif isinstance(prompt, str):
-                prompt_messages.append(HumanMessage(content=prompt))
-
+        else:
+            if input is None:
+                prepared_prompt = []
+            elif isinstance(input, str):
+                prepared_prompt = [HumanMessage(content=input)]
+            # Try to find the prompt in the input dictionary
+            elif "prompt" in input:
+                prepared_prompt = [HumanMessage(content=input["prompt"])]
+            elif "input" in input:
+                prepared_prompt = [HumanMessage(content=input["input"])]
             else:
-                raise ValueError("Prompt must be a string or a ChatPromptTemplate")
+                prepared_prompt = []
+
+        if not prepared_prompt:
+            raise ValueError("No prompt provided to the agent")
 
         if as_messages:
-            return prompt_messages
+            return prepared_prompt
 
-        # TODO: pass the unformatted messages list to agents that can handle it
-        prompt = "\n\n".join([m.content for m in prompt_messages]) + "\n"
-        return prompt
+        return "\n\n".join([m.content for m in prepared_prompt])
 
     @property
     def agent(self):
@@ -180,7 +187,9 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
 
         self._agent = self.agent_factory(tools=self.tools)
 
-    def _prepare_for_invocation(self, input: dict, prompt_as_messages: bool = False) -> str:
+    def _prepare_for_invocation(
+        self, input: str | dict | None = None, prompt_as_messages: bool = False
+    ) -> str:
         """Prepare the agent for invocation by materializing it and composing the prompt.
 
         Should be called in the beginning of the agent's invoke method.
@@ -200,7 +209,7 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
             tool.agent = self
             tool.agent_input = input
 
-        prompt = self.compose_prompt(input, input.get("prompt"), as_messages=prompt_as_messages)
+        prompt = self.compose_prompt(input, as_messages=prompt_as_messages)
         return prompt
 
     def add_tools(self, tools: Sequence[MotleySupportedTool]):

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from langchain.agents import Tool
 from langchain.prompts import PromptTemplate
@@ -39,7 +39,7 @@ class DallEImageGeneratorTool(MotleyTool):
         size: str = "1024x1024",
         style: Optional[str] = None,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
     ):
         """
         Args:
@@ -63,7 +63,7 @@ class DallEImageGeneratorTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 

@@ -54,7 +54,7 @@ It is also possible to define a custom tool using the ``MotleyTool`` base class,
 
 Tools can be executed asynchronously, either directly of via by an asynchronous agent. By default, the async version will just run the sync version in a separate thread.
 
-MotleyTool can reflect exceptions that are raised inside it back to the agent, which can then retry the tool call. You can pass a list of exception classes to the ``exceptions_to_reflect`` argument in the constructor (or even pass the ``Exception`` class to reflect everything).
+MotleyTool can return exceptions that are raised inside it back to the agent, which can then retry the tool call. You can pass a list of exception classes to the ``handle_exceptions`` argument in the constructor (or even pass ``True`` to handle everything).
 
 Crew and tasks
 --------------

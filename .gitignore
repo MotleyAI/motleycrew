@@ -87,5 +87,7 @@ dmypy.json
 
 scripts/
 
+tests/itest_cache/
+
 # docs-related stuff
 docs/source/_autosummary

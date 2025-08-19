@@ -62,7 +62,7 @@ class MotleyGraphNode(BaseModel, ABC):
         """
         super().__setattr__(name, value)
 
-        if name not in self.model_fields:
+        if name not in self.__class__.model_fields:
             # Q: Should we not raise an error here instead?
             # A: No, there are technical attributes like __graph_store__ that are not in the model
             return  # Non-pydantic field => not in the DB

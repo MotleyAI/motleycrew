@@ -1,10 +1,10 @@
 from typing import Optional
 
 from langchain.prompts import PromptTemplate
+from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts.base import BasePromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough, chain
 from langchain_core.tools import StructuredTool
-from langchain_core.language_models import BaseLanguageModel
 from pydantic import BaseModel, Field
 
 from motleycrew.applications.research_agent.question import Question
@@ -23,7 +23,7 @@ class QuestionPrioritizerTool(MotleyTool):
     ):
         langchain_tool = create_question_prioritizer_langchain_tool(prompt=prompt, llm=llm)
 
-        super().__init__(langchain_tool)
+        super().__init__(tool=langchain_tool)
 
 
 _default_prompt = PromptTemplate(

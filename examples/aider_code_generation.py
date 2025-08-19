@@ -40,7 +40,7 @@ def main():
     shell_tool = ShellTool()
 
     developer = ReActToolCallingMotleyAgent(
-        prompt_prefix="You are a lead software engineer working in a big tech company.",
+        prompt="You are a lead software engineer working in a big tech company.\n{prompt}",
         verbose=True,
         tools=[aider_tool, shell_tool],
     )

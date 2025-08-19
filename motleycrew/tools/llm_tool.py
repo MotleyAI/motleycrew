@@ -23,7 +23,7 @@ class LLMTool(MotleyTool):
         input_schema: Optional[Type[BaseModel]] = None,
         output_schema: Optional[Type[BaseModel]] = None,
         return_direct: bool = False,
-        exceptions_to_reflect: Optional[List[Exception]] = None,
+        handle_exceptions: bool | List[Type[Exception]] = False,
     ):
         """
         Args:
@@ -47,7 +47,7 @@ class LLMTool(MotleyTool):
         super().__init__(
             tool=langchain_tool,
             return_direct=return_direct,
-            exceptions_to_reflect=exceptions_to_reflect,
+            handle_exceptions=handle_exceptions,
         )
 
 
