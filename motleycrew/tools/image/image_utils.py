@@ -1,4 +1,5 @@
 """Utilities for working with images in LLM contexts."""
+
 import base64
 import mimetypes
 from langchain_core.messages import HumanMessage
