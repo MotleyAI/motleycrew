@@ -81,12 +81,14 @@ def create_tool_calling_react_agent(
     # Preserve existing bindings when binding tools
     # If the LLM is already bound (e.g., with stream=False), preserve those kwargs
     if hasattr(llm, "kwargs") and llm.kwargs:
-        # LLM is a RunnableBinding, preserve existing kwargs while adding tools
+        # LLM is a RunnableBinding, preserve existing kwargs but bind tools separately
         existing_kwargs = llm.kwargs.copy()
-        existing_kwargs["tools"] = tools_for_llm
+        # Don't put tools in kwargs to avoid serialization issues with Generic inheritance
         # Access the bound property - mypy can't infer this so we use getattr
         bound_llm = getattr(llm, "bound")
-        llm_with_tools = bound_llm.bind(**existing_kwargs)
+        llm_with_existing_kwargs = bound_llm.bind(**existing_kwargs)
+        # Now bind tools to the LLM that already has existing kwargs preserved
+        llm_with_tools = llm_with_existing_kwargs.bind_tools(tools=tools_for_llm)
     else:
         # LLM is not bound, just bind tools normally
         llm_with_tools = llm.bind_tools(tools=tools_for_llm)
