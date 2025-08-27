@@ -19,7 +19,9 @@ def langchain_openai_llm(
     """
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return ChatOpenAI(model=llm_name, **kwargs)
 
 
 def llama_index_openai_llm(
@@ -37,7 +39,9 @@ def llama_index_openai_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.openai import OpenAI
 
-    return OpenAI(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return OpenAI(model=llm_name, **kwargs)
 
 
 def langchain_anthropic_llm(
@@ -54,7 +58,9 @@ def langchain_anthropic_llm(
 
     from langchain_anthropic import ChatAnthropic
 
-    return ChatAnthropic(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return ChatAnthropic(model=llm_name, **kwargs)
 
 
 def llama_index_anthropic_llm(
@@ -71,7 +77,9 @@ def llama_index_anthropic_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.anthropic import Anthropic
 
-    return Anthropic(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return Anthropic(model=llm_name, **kwargs)
 
 
 def langchain_replicate_llm(
@@ -88,7 +96,8 @@ def langchain_replicate_llm(
     from langchain_community.llms import Replicate
 
     model_kwargs = kwargs.pop("model_kwargs", {})
-    model_kwargs["temperature"] = llm_temperature
+    if llm_temperature is not None:
+        model_kwargs["temperature"] = llm_temperature
 
     return Replicate(model=llm_name, model_kwargs=model_kwargs, **kwargs)
 
@@ -107,7 +116,9 @@ def llama_index_replicate_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.replicate import Replicate
 
-    return Replicate(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return Replicate(model=llm_name, **kwargs)
 
 
 def langchain_together_llm(
@@ -123,7 +134,9 @@ def langchain_together_llm(
     """
     from langchain_together import ChatTogether
 
-    return ChatTogether(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return ChatTogether(model=llm_name, **kwargs)
 
 
 def llama_index_together_llm(
@@ -140,7 +153,9 @@ def llama_index_together_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.together import TogetherLLM
 
-    return TogetherLLM(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return TogetherLLM(model=llm_name, **kwargs)
 
 
 def langchain_groq_llm(
@@ -156,7 +171,9 @@ def langchain_groq_llm(
     """
     from langchain_groq import ChatGroq
 
-    return ChatGroq(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return ChatGroq(model=llm_name, **kwargs)
 
 
 def llama_index_groq_llm(
@@ -173,7 +190,9 @@ def llama_index_groq_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.groq import Groq
 
-    return Groq(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return Groq(model=llm_name, **kwargs)
 
 
 def langchain_ollama_llm(
@@ -189,7 +208,9 @@ def langchain_ollama_llm(
     """
     from langchain_ollama.chat_models import ChatOllama
 
-    return ChatOllama(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return ChatOllama(model=llm_name, **kwargs)
 
 
 def llama_index_ollama_llm(
@@ -206,7 +227,9 @@ def llama_index_ollama_llm(
     ensure_module_is_installed("llama_index")
     from llama_index.llms.ollama import Ollama
 
-    return Ollama(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return Ollama(model=llm_name, **kwargs)
 
 
 def langchain_azure_openai_llm(
@@ -222,7 +245,9 @@ def langchain_azure_openai_llm(
     """
     from langchain_openai import AzureChatOpenAI
 
-    return AzureChatOpenAI(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return AzureChatOpenAI(model=llm_name, **kwargs)
 
 
 def llama_index_azure_openai_llm(
@@ -247,7 +272,9 @@ def llama_index_azure_openai_llm(
             "For using Azure OpenAI with LlamaIndex, you must specify an engine/deployment name."
         )
 
-    return AzureOpenAI(model=llm_name, temperature=llm_temperature, **kwargs)
+    if llm_temperature is not None:
+        kwargs["temperature"] = llm_temperature
+    return AzureOpenAI(model=llm_name, **kwargs)
 
 
 LLM_MAP = {
@@ -285,7 +312,8 @@ def init_llm(
     """
     llm_provider = llm_provider or Defaults.DEFAULT_LLM_PROVIDER
     llm_name = llm_name or Defaults.DEFAULT_LLM_NAME
-    llm_temperature = llm_temperature or Defaults.DEFAULT_LLM_TEMPERATURE
+    if llm_temperature is None:
+        llm_temperature = Defaults.DEFAULT_LLM_TEMPERATURE
 
     func = LLM_MAP.get((llm_framework, llm_provider), None)
     if func is not None:
