@@ -8,258 +8,203 @@ from motleycrew.common.utils import ensure_module_is_installed
 
 def langchain_openai_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an OpenAI LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in OpenAI API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_openai import ChatOpenAI
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return ChatOpenAI(model=llm_name, **kwargs)
 
 
 def llama_index_openai_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an OpenAI LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in OpenAI API.
-        llm_temperature: Temperature for the LLM.
     """
 
     ensure_module_is_installed("llama_index")
     from llama_index.llms.openai import OpenAI
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return OpenAI(model=llm_name, **kwargs)
 
 
 def langchain_anthropic_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Anthropic LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Anthropic API.
-        llm_temperature: Temperature for the LLM.
     """
 
     from langchain_anthropic import ChatAnthropic
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return ChatAnthropic(model=llm_name, **kwargs)
 
 
 def llama_index_anthropic_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Anthropic LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Anthropic API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.anthropic import Anthropic
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return Anthropic(model=llm_name, **kwargs)
 
 
 def langchain_replicate_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Replicate LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Replicate API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_community.llms import Replicate
 
     model_kwargs = kwargs.pop("model_kwargs", {})
-    if llm_temperature is not None:
-        model_kwargs["temperature"] = llm_temperature
-
     return Replicate(model=llm_name, model_kwargs=model_kwargs, **kwargs)
 
 
 def llama_index_replicate_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Replicate LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Replicate API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.replicate import Replicate
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return Replicate(model=llm_name, **kwargs)
 
 
 def langchain_together_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Together LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Together API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_together import ChatTogether
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return ChatTogether(model=llm_name, **kwargs)
 
 
 def llama_index_together_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Together LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Together API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.together import TogetherLLM
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return TogetherLLM(model=llm_name, **kwargs)
 
 
 def langchain_groq_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Groq LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Groq API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_groq import ChatGroq
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return ChatGroq(model=llm_name, **kwargs)
 
 
 def llama_index_groq_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize a Groq LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Groq API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.groq import Groq
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return Groq(model=llm_name, **kwargs)
 
 
 def langchain_ollama_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Ollama LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Ollama API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_ollama.chat_models import ChatOllama
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return ChatOllama(model=llm_name, **kwargs)
 
 
 def llama_index_ollama_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Ollama LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Ollama API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.ollama import Ollama
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return Ollama(model=llm_name, **kwargs)
 
 
 def langchain_azure_openai_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Azure OpenAI LLM client for use with Langchain.
 
     Args:
         llm_name: Name of the LLM in Azure OpenAI API.
-        llm_temperature: Temperature for the LLM.
     """
     from langchain_openai import AzureChatOpenAI
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return AzureChatOpenAI(model=llm_name, **kwargs)
 
 
 def llama_index_azure_openai_llm(
     llm_name: str = Defaults.DEFAULT_LLM_NAME,
-    llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
     **kwargs,
 ):
     """Initialize an Azure OpenAI LLM client for use with LlamaIndex.
 
     Args:
         llm_name: Name of the LLM in Azure OpenAI API.
-        llm_temperature: Temperature for the LLM.
     """
     ensure_module_is_installed("llama_index")
     from llama_index.llms.azure_openai import AzureOpenAI
@@ -272,8 +217,6 @@ def llama_index_azure_openai_llm(
             "For using Azure OpenAI with LlamaIndex, you must specify an engine/deployment name."
         )
 
-    if llm_temperature is not None:
-        kwargs["temperature"] = llm_temperature
     return AzureOpenAI(model=llm_name, **kwargs)
 
 
@@ -299,7 +242,6 @@ def init_llm(
     llm_framework: str,
     llm_provider: Optional[str] = None,
     llm_name: Optional[str] = None,
-    llm_temperature: Optional[float] = None,
     **kwargs,
 ):
     """Initialize an LLM client for use with the specified framework and family.
@@ -308,15 +250,16 @@ def init_llm(
         llm_framework: Framework of the LLM client.
         llm_provider: Provider of the LLM.
         llm_name: Name of the LLM.
-        llm_temperature: Temperature for the LLM.
     """
     llm_provider = llm_provider or Defaults.DEFAULT_LLM_PROVIDER
     llm_name = llm_name or Defaults.DEFAULT_LLM_NAME
-    if llm_temperature is None:
-        llm_temperature = Defaults.DEFAULT_LLM_TEMPERATURE
+    
+    # Set default temperature only if not provided in kwargs
+    if 'llm_temperature' not in kwargs:
+        kwargs['llm_temperature'] = Defaults.DEFAULT_LLM_TEMPERATURE
 
     func = LLM_MAP.get((llm_framework, llm_provider), None)
     if func is not None:
-        return func(llm_name=llm_name, llm_temperature=llm_temperature, **kwargs)
+        return func(llm_name=llm_name, **kwargs)
 
     raise LLMProviderNotSupported(llm_framework=llm_framework, llm_provider=llm_provider)
