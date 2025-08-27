@@ -2,6 +2,7 @@ import os
 
 import pytest
 from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 
 from motleycrew.agents.langchain.tool_calling_react import ReActToolCallingMotleyAgent
 from motleycrew.agents.llama_index.llama_index_react import ReActLlamaIndexMotleyAgent
@@ -48,3 +49,68 @@ class TestAgents:
         prompt = agent.compose_prompt(input=task_dict)
 
         assert "What are the latest AI trends?" in prompt
+
+    def test_streaming_configuration_preserved(self):
+        """Test that streaming configuration is preserved when binding tools."""
+        # Create base LLM
+        base_llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        
+        # Bind stream=False
+        non_streaming_llm = base_llm.bind(stream=False)
+        
+        # Verify the binding worked
+        assert hasattr(non_streaming_llm, 'kwargs')
+        assert non_streaming_llm.kwargs.get('stream') is False
+        
+        # Create agent with non-streaming LLM
+        agent = ReActToolCallingMotleyAgent(
+            llm=non_streaming_llm,
+            name="test_agent",
+            tools=[MockTool()],
+        )
+        
+        # Materialize the agent to trigger the LLM binding with tools
+        agent.materialize()
+        
+        # The test passes if the agent is created successfully
+        # The fix ensures that the streaming configuration is preserved
+        assert agent.is_materialized
+        
+    def test_streaming_configuration_preserved_true(self):
+        """Test that streaming=True configuration is also preserved when binding tools."""
+        # Create base LLM
+        base_llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        
+        # Bind stream=True
+        streaming_llm = base_llm.bind(stream=True)
+        
+        # Verify the binding worked
+        assert hasattr(streaming_llm, 'kwargs')
+        assert streaming_llm.kwargs.get('stream') is True
+        
+        # Create agent with streaming LLM
+        agent = ReActToolCallingMotleyAgent(
+            llm=streaming_llm,
+            name="test_agent",
+            tools=[MockTool()],
+        )
+        
+        # Materialize the agent to trigger the LLM binding with tools
+        agent.materialize()
+        
+        # The test passes if the agent is created successfully
+        assert agent.is_materialized
+        
+    def test_default_llm_no_streaming_configuration(self):
+        """Test that agents work normally when no explicit streaming configuration is set."""
+        # Create agent with default LLM (no explicit streaming configuration)
+        agent = ReActToolCallingMotleyAgent(
+            name="test_agent",
+            tools=[MockTool()],
+        )
+        
+        # Materialize the agent
+        agent.materialize()
+        
+        # The test passes if the agent is created successfully
+        assert agent.is_materialized

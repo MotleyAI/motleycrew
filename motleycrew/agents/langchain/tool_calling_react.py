@@ -8,7 +8,7 @@ from langchain.agents.format_scratchpad.tools import format_to_tool_messages
 from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableConfig
 from langchain_core.runnables.history import GetSessionHistoryCallable
 from langchain_core.tools import BaseTool
 
@@ -70,12 +70,26 @@ def create_tool_calling_react_agent(
 ) -> Runnable:
     internal_prompt = internal_prompt.partial(
         tools=render_text_description(list(tools)),
-        output_handlers=render_text_description(output_handlers) if force_output_handler else "",
+        output_handlers=(
+            render_text_description(output_handlers) if force_output_handler else ""
+        ),
     )
     check_variables(internal_prompt)
 
     tools_for_llm = list(tools)
-    llm_with_tools = llm.bind_tools(tools=tools_for_llm)
+
+    # Preserve existing bindings when binding tools
+    # If the LLM is already bound (e.g., with stream=False), preserve those kwargs
+    if hasattr(llm, "kwargs") and llm.kwargs:
+        # LLM is a RunnableBinding, preserve existing kwargs while adding tools
+        existing_kwargs = llm.kwargs.copy()
+        existing_kwargs["tools"] = tools_for_llm
+        # Access the bound property - mypy can't infer this so we use getattr
+        bound_llm = getattr(llm, "bound")
+        llm_with_tools = bound_llm.bind(**existing_kwargs)
+    else:
+        # LLM is not bound, just bind tools normally
+        llm_with_tools = llm.bind_tools(tools=tools_for_llm)
 
     if not intermediate_steps_processor:
         intermediate_steps_processor = lambda x: x
@@ -186,7 +200,9 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
 
         if not tools:
-            raise ValueError("You must provide at least one tool to the ReActToolCallingAgent")
+            raise ValueError(
+                "You must provide at least one tool to the ReActToolCallingAgent"
+            )
 
         if internal_prompt is None:
             internal_prompt = get_relevant_internal_prompt(
