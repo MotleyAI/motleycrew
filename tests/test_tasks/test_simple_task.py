@@ -1,7 +1,14 @@
 import pytest
-from langchain_community.tools import DuckDuckGoSearchRun
 
 from motleycrew.agents.langchain.tool_calling_react import ReActToolCallingMotleyAgent
+
+try:
+    from langchain_community.tools import DuckDuckGoSearchRun
+    # Test if we can actually create the tool (checks for duckduckgo_search module)
+    DuckDuckGoSearchRun()
+    DUCKDUCKGO_AVAILABLE = True
+except (ImportError, Exception):
+    DUCKDUCKGO_AVAILABLE = False
 from motleycrew.crew import MotleyCrew
 from motleycrew.storage.graph_store_utils import init_graph_store
 from motleycrew.tasks.simple import (
@@ -24,9 +31,16 @@ def crew(graph_store):
 
 @pytest.fixture
 def agent():
+    if DUCKDUCKGO_AVAILABLE:
+        tools = [DuckDuckGoSearchRun()]
+    else:
+        # Create a mock tool when DuckDuckGoSearchRun is not available
+        from tests.test_agents import MockTool
+        tools = [MockTool()]
+    
     agent = ReActToolCallingMotleyAgent(
         name="AI writer agent",
-        tools=[DuckDuckGoSearchRun()],
+        tools=tools,
         verbose=True,
     )
     return agent

@@ -33,15 +33,15 @@ def python_linter_tool():
 #     assert expected == parse_result
 #
 #
-# @pytest.mark.parametrize(
-#     "code, file_name, valid_code, raises",
-#     [
-#         ("def plus(a, b):\n\treturn a + b", None, True, False),
-#         ("def plus(a):\n\treturn a + b", "test_code.py", False, False),
-#         ("def plus(a, b):\nreturn a + b", "test_code.py", False, False),
-#         ("def plus(a, b):\n\treturn a + b", "code.js", True, True),
-#     ],
-# )
+@pytest.mark.parametrize(
+    "code, file_name, valid_code, raises",
+    [
+        ("def plus(a, b):\n\treturn a + b", None, True, False),
+        ("def plus(a):\n\treturn a + b", "test_code.py", False, False),
+        ("def plus(a, b):\nreturn a + b", "test_code.py", False, False),
+        ("def plus(a, b):\n\treturn a + b", "code.js", True, True),
+    ],
+)
 def test_python_tool(python_linter_tool, code, file_name, valid_code, raises):
     if python_linter_tool is None:
         return
