@@ -1,13 +1,13 @@
-from typing import Type, Any, Optional, Callable, TypeVar, Generic
+from typing import Type, Any, Optional, Callable, TypeVar
 
 from pydantic import BaseModel
 
 from motleycrew.tools.tool import MotleyTool
 
-T = TypeVar('T', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
 
 
-class StructuredPassthroughTool(MotleyTool, Generic[T]):
+class StructuredPassthroughTool(MotleyTool):
     """
     A tool that enforces a certain output shape, raising an error if the output is not as expected.
     """
