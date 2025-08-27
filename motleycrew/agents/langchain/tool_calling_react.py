@@ -70,9 +70,7 @@ def create_tool_calling_react_agent(
 ) -> Runnable:
     internal_prompt = internal_prompt.partial(
         tools=render_text_description(list(tools)),
-        output_handlers=(
-            render_text_description(output_handlers) if force_output_handler else ""
-        ),
+        output_handlers=(render_text_description(output_handlers) if force_output_handler else ""),
     )
     check_variables(internal_prompt)
 
@@ -86,8 +84,8 @@ def create_tool_calling_react_agent(
         # Don't put tools in kwargs to avoid serialization issues with Generic inheritance
         # Access the bound property - mypy can't infer this so we use getattr
         bound_llm = getattr(llm, "bound")
+        # Apply existing kwargs FIRST (including stream=False), then bind tools
         llm_with_existing_kwargs = bound_llm.bind(**existing_kwargs)
-        # Now bind tools to the LLM that already has existing kwargs preserved
         llm_with_tools = llm_with_existing_kwargs.bind_tools(tools=tools_for_llm)
     else:
         # LLM is not bound, just bind tools normally
@@ -202,9 +200,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
 
         if not tools:
-            raise ValueError(
-                "You must provide at least one tool to the ReActToolCallingAgent"
-            )
+            raise ValueError("You must provide at least one tool to the ReActToolCallingAgent")
 
         if internal_prompt is None:
             internal_prompt = get_relevant_internal_prompt(
