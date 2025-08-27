@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Union
 
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts.chat import ChatPromptTemplate, HumanMessage
@@ -100,7 +100,7 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         return self.__repr__()
 
     def compose_prompt(
-        self, input: str | dict | None = None, as_messages: bool = False
+        self, input: Union[str, dict, List[BaseMessage], None] = None, as_messages: bool = False
     ) -> Union[str, list[BaseMessage]]:
         """Compose the agent's prompt from the prompt prefix and the provided prompt.
 
@@ -111,6 +111,13 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         Returns:
             The composed prompt.
         """
+        # If input is already a list of messages, return them directly
+        if isinstance(input, list) and all(isinstance(m, BaseMessage) for m in input):
+            if as_messages:
+                return input
+            # Convert messages to string representation (fallback)
+            return "\n\n".join([m.content if hasattr(m, 'content') and isinstance(m.content, str) else str(m.content) for m in input])
+        
         if self.prompt:
             if isinstance(input, str):
                 raise ValueError(
@@ -188,8 +195,8 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         self._agent = self.agent_factory(tools=self.tools)
 
     def _prepare_for_invocation(
-        self, input: str | dict | None = None, prompt_as_messages: bool = False
-    ) -> str:
+        self, input: Union[str, dict, List[BaseMessage], None] = None, prompt_as_messages: bool = False
+    ) -> Union[str, List[BaseMessage]]:
         """Prepare the agent for invocation by materializing it and composing the prompt.
 
         Should be called in the beginning of the agent's invoke method.
@@ -200,7 +207,7 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
                 instead of a single string.
 
         Returns:
-            str: the composed prompt
+            Union[str, List[BaseMessage]]: the composed prompt
         """
         self.materialize()
 
