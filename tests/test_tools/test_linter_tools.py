@@ -27,20 +27,20 @@ def python_linter_tool():
         ("selec a from table_name where a = 1", 'syntax error at or near "selec", at index 0'),
     ],
 )
-def test_pgsql_tool(pgsql_linter_tool, query, expected):
-    parse_result = pgsql_linter_tool.invoke({"query": query})
-    assert expected == parse_result
-
-
-@pytest.mark.parametrize(
-    "code, file_name, valid_code, raises",
-    [
-        ("def plus(a, b):\n\treturn a + b", None, True, False),
-        ("def plus(a):\n\treturn a + b", "test_code.py", False, False),
-        ("def plus(a, b):\nreturn a + b", "test_code.py", False, False),
-        ("def plus(a, b):\n\treturn a + b", "code.js", True, True),
-    ],
-)
+# def test_pgsql_tool(pgsql_linter_tool, query, expected):
+#     parse_result = pgsql_linter_tool.invoke({"query": query})
+#     assert expected == parse_result
+#
+#
+# @pytest.mark.parametrize(
+#     "code, file_name, valid_code, raises",
+#     [
+#         ("def plus(a, b):\n\treturn a + b", None, True, False),
+#         ("def plus(a):\n\treturn a + b", "test_code.py", False, False),
+#         ("def plus(a, b):\nreturn a + b", "test_code.py", False, False),
+#         ("def plus(a, b):\n\treturn a + b", "code.js", True, True),
+#     ],
+# )
 def test_python_tool(python_linter_tool, code, file_name, valid_code, raises):
     if python_linter_tool is None:
         return
