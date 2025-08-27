@@ -1,4 +1,5 @@
 """Helper functions to initialize Language Models (LLMs) from different frameworks."""
+
 from typing import Optional
 
 from motleycrew.common import Defaults, LLMFramework, LLMProvider
@@ -253,10 +254,6 @@ def init_llm(
     """
     llm_provider = llm_provider or Defaults.DEFAULT_LLM_PROVIDER
     llm_name = llm_name or Defaults.DEFAULT_LLM_NAME
-    
-    # Set default temperature only if not provided in kwargs
-    if 'llm_temperature' not in kwargs:
-        kwargs['llm_temperature'] = Defaults.DEFAULT_LLM_TEMPERATURE
 
     func = LLM_MAP.get((llm_framework, llm_provider), None)
     if func is not None:
