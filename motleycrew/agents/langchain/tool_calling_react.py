@@ -78,7 +78,7 @@ def create_tool_calling_react_agent(
 
     # Preserve existing bindings when binding tools
     # If the LLM is already bound (e.g., with stream=False), preserve those kwargs
-    if hasattr(llm, "kwargs") and llm.kwargs:
+    if False & hasattr(llm, "kwargs") and llm.kwargs:
         # LLM is a RunnableBinding, preserve existing kwargs but bind tools separately
         existing_kwargs = llm.kwargs.copy()
         # Don't put tools in kwargs to avoid serialization issues with Generic inheritance
@@ -127,6 +127,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
         force_output_handler: bool = False,
         handle_parsing_errors: bool = False,
         llm: BaseChatModel | None = None,
+        stream: bool = False,
         max_iterations: int | None = Defaults.DEFAULT_REACT_AGENT_MAX_ITERATIONS,
         internal_prompt: ChatPromptTemplate | None = None,
         intermediate_steps_processor: Callable | None = None,
@@ -196,6 +197,8 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
 
             prompt = prompt_prefix + "\n\n{prompt}"
 
+        llm.bind(stream=stream)
+
         if llm is None:
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
 
@@ -228,6 +231,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
                 handle_parsing_errors=handle_parsing_errors,
                 verbose=verbose,
                 max_iterations=max_iterations,
+                stream_runnable=stream,
             )
             return agent_executor
 
