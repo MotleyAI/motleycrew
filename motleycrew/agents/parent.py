@@ -74,7 +74,11 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         """
         self.name = name or description
         self.description = description  # becomes tool description
-        self.prompt = prompt
+        self.prompt = (
+            ChatPromptTemplate.from_messages([("user", prompt)])
+            if isinstance(prompt, str)
+            else prompt
+        )
         self.agent_factory = agent_factory
         self.tools: dict[str, MotleyTool] = {}
         self.force_output_handler = force_output_handler
@@ -113,11 +117,22 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         """
         # If input is already a list of messages, return them directly
         if isinstance(input, list) and all(isinstance(m, BaseMessage) for m in input):
+            prompt_input = {k: "missing" for k in self.prompt.input_variables}
+            output = [HumanMessage(content=self.prompt.format(**prompt_input))] + input
             if as_messages:
-                return input
+                return output
             # Convert messages to string representation (fallback)
-            return "\n\n".join([m.content if hasattr(m, 'content') and isinstance(m.content, str) else str(m.content) for m in input])
-        
+            return "\n\n".join(
+                [
+                    (
+                        m.content
+                        if hasattr(m, "content") and isinstance(m.content, str)
+                        else str(m.content)
+                    )
+                    for m in output
+                ]
+            )
+
         if self.prompt:
             if isinstance(input, str):
                 raise ValueError(
@@ -195,7 +210,9 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         self._agent = self.agent_factory(tools=self.tools)
 
     def _prepare_for_invocation(
-        self, input: Union[str, dict, List[BaseMessage], None] = None, prompt_as_messages: bool = False
+        self,
+        input: Union[str, dict, List[BaseMessage], None] = None,
+        prompt_as_messages: bool = False,
     ) -> Union[str, List[BaseMessage]]:
         """Prepare the agent for invocation by materializing it and composing the prompt.
 

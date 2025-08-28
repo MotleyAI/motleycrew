@@ -75,21 +75,7 @@ def create_tool_calling_react_agent(
     check_variables(internal_prompt)
 
     tools_for_llm = list(tools)
-
-    # Preserve existing bindings when binding tools
-    # If the LLM is already bound (e.g., with stream=False), preserve those kwargs
-    if False & hasattr(llm, "kwargs") and llm.kwargs:
-        # LLM is a RunnableBinding, preserve existing kwargs but bind tools separately
-        existing_kwargs = llm.kwargs.copy()
-        # Don't put tools in kwargs to avoid serialization issues with Generic inheritance
-        # Access the bound property - mypy can't infer this so we use getattr
-        bound_llm = getattr(llm, "bound")
-        # Apply existing kwargs FIRST (including stream=False), then bind tools
-        llm_with_existing_kwargs = bound_llm.bind(**existing_kwargs)
-        llm_with_tools = llm_with_existing_kwargs.bind_tools(tools=tools_for_llm)
-    else:
-        # LLM is not bound, just bind tools normally
-        llm_with_tools = llm.bind_tools(tools=tools_for_llm)
+    llm_with_tools = llm.bind_tools(tools=tools_for_llm)
 
     if not intermediate_steps_processor:
         intermediate_steps_processor = lambda x: x
@@ -197,10 +183,10 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
 
             prompt = prompt_prefix + "\n\n{prompt}"
 
-        llm.bind(stream=stream)
-
         if llm is None:
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
+
+        llm.bind(stream=stream)
 
         if not tools:
             raise ValueError("You must provide at least one tool to the ReActToolCallingAgent")
