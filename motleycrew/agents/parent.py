@@ -117,8 +117,11 @@ class MotleyAgentParent(MotleyAgentAbstractParent, ABC):
         """
         # If input is already a list of messages, return them directly
         if isinstance(input, list) and all(isinstance(m, BaseMessage) for m in input):
-            prompt_input = {k: "missing" for k in self.prompt.input_variables}
-            output = [HumanMessage(content=self.prompt.format(**prompt_input))] + input
+            if len(self.prompt.input_variables):
+                raise ValueError(
+                    "Cannot use a prompt with variables when input is a list of messages"
+                )
+            output = [HumanMessage(content=self.prompt.format())] + input
             if as_messages:
                 return output
             # Convert messages to string representation (fallback)

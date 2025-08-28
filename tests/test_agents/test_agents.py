@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from langchain_core.messages import HumanMessage
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
@@ -114,3 +115,49 @@ class TestAgents:
         
         # The test passes if the agent is created successfully
         assert agent.is_materialized
+
+    def test_compose_prompt_with_messages_and_variables_error(self):
+        """Test that providing messages input with a prompt containing variables raises an error."""
+        agent = ReActToolCallingMotleyAgent(
+            name="test_agent",
+            prompt="What are the latest {topic} trends?",  # Has variables
+            tools=[MockTool()],
+        )
+        
+        messages = [HumanMessage(content="Hello world")]
+        
+        with pytest.raises(ValueError, match="Cannot use a prompt with variables when input is a list of messages"):
+            agent.compose_prompt(input=messages)
+
+    def test_compose_prompt_with_messages_no_variables(self):
+        """Test that static prompt gets prepended when input is a list of BaseMessages."""
+        agent = ReActToolCallingMotleyAgent(
+            name="test_agent", 
+            prompt="You are a helpful assistant",  # No variables
+            tools=[MockTool()],
+        )
+        
+        input_messages = [HumanMessage(content="Hello world")]
+        result = agent.compose_prompt(input=input_messages, as_messages=True)
+        
+        # Should have 2 messages: prompt message + input message
+        assert len(result) == 2
+        assert isinstance(result[0], HumanMessage)
+        assert result[0].content == "Human: You are a helpful assistant"
+        assert result[1].content == "Hello world"
+
+    def test_compose_prompt_with_messages_no_variables_as_string(self):
+        """Test that messages are converted to string when as_messages=False."""
+        agent = ReActToolCallingMotleyAgent(
+            name="test_agent",
+            prompt="You are a helpful assistant",  # No variables
+            tools=[MockTool()],
+        )
+        
+        input_messages = [HumanMessage(content="Hello world")]
+        result = agent.compose_prompt(input=input_messages, as_messages=False)
+        
+        # Should be a string with both messages joined
+        assert isinstance(result, str)
+        assert "Human: You are a helpful assistant" in result
+        assert "Hello world" in result
