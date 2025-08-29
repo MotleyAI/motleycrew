@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Optional, Sequence
+from typing import Any, List, Optional, Sequence, Union
 
 from langchain.agents import AgentExecutor
 from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.messages import BaseMessage
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
@@ -185,30 +186,46 @@ class LangchainMotleyAgent(MotleyAgentParent, LangchainOutputHandlingAgentMixin)
 
     def invoke(
         self,
-        input: Optional[str | dict] = None,
+        input: Optional[Union[str, dict, List[BaseMessage]]] = None,
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
         config = self._prepare_config(config)
-        prompt = self._prepare_for_invocation(
-            input=input, prompt_as_messages=self.input_as_messages
-        )
+        
+        # Check if input is already messages - if so, pass them through directly
+        if isinstance(input, list) and all(isinstance(m, BaseMessage) for m in input):
+            prompt = self._prepare_for_invocation(
+                input=input, prompt_as_messages=True
+            )
+        else:
+            prompt = self._prepare_for_invocation(
+                input=input, prompt_as_messages=self.input_as_messages
+            )
 
         output = self.agent.invoke({"input": prompt}, config, **kwargs)
         return output.get("output") or output
 
     async def ainvoke(
         self,
-        input: Optional[str | dict] = None,
+        input: Optional[Union[str, dict, List[BaseMessage]]] = None,
         config: Optional[RunnableConfig] = None,
         **kwargs: Any,
     ) -> Any:
         config = self._prepare_config(config)
-        prompt = await asyncio.to_thread(
-            self._prepare_for_invocation,
-            input=input,
-            prompt_as_messages=self.input_as_messages,
-        )
+        
+        # Check if input is already messages - if so, pass them through directly
+        if isinstance(input, list) and all(isinstance(m, BaseMessage) for m in input):
+            prompt = await asyncio.to_thread(
+                self._prepare_for_invocation,
+                input=input,
+                prompt_as_messages=True,
+            )
+        else:
+            prompt = await asyncio.to_thread(
+                self._prepare_for_invocation,
+                input=input,
+                prompt_as_messages=self.input_as_messages,
+            )
 
         output = await self.agent.ainvoke({"input": prompt}, config, **kwargs)
         return output.get("output") or output

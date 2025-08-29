@@ -31,7 +31,7 @@ That's why we have an ``init_llm`` function to help you set up the LLM.
         llm_framework=LLMFramework.LANGCHAIN,
         llm_provider=LLMProvider.ANTHROPIC,
         llm_name="claude-3-5-sonnet-latest",
-        llm_temperature=0
+        temperature=0
     )
     agent = ReActToolCallingMotleyAgent(llm=llm, tools=[...])
 
@@ -85,7 +85,7 @@ the `LLM_MAP` has an entry for the LLM provider, for example as follows:
     LLM_MAP[(LLMFramework.LLAMA_INDEX, "MyLLMProvider")] = my_llamaindex_llm_factory
 
 Here each llm factory is a function with a signature
-``def llm_factory(llm_name: str, llm_temperature: float, **kwargs)`` that returns the model object for the relevant framework.
+``def llm_factory(llm_name: str, **kwargs)`` that returns the model object for the relevant framework.
 
 For example, this is the built-in OpenAI model factory for Langchain:
 
@@ -93,12 +93,22 @@ For example, this is the built-in OpenAI model factory for Langchain:
 
     def langchain_openai_llm(
         llm_name: str = Defaults.DEFAULT_LLM_NAME,
-        llm_temperature: float = Defaults.DEFAULT_LLM_TEMPERATURE,
         **kwargs,
     ):
         from langchain_openai import ChatOpenAI
 
-        return ChatOpenAI(model=llm_name, temperature=llm_temperature, **kwargs)
+        return ChatOpenAI(model=llm_name, **kwargs)
+
+Temperature and other model parameters can be passed via ``**kwargs``, for example:
+
+.. code-block:: python
+
+    llm = init_llm(
+        llm_framework=LLMFramework.LANGCHAIN,
+        llm_provider=LLMProvider.OPENAI,
+        temperature=0.7,
+        max_tokens=1000
+    )
 
 
 You can also overwrite the `LLM_MAP` values for e.g. the OpenAI models if, for example,

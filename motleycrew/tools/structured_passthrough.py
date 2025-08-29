@@ -1,8 +1,10 @@
-from typing import Type, Any, Optional, Callable
+from typing import Type, Any, Optional, Callable, TypeVar
 
 from pydantic import BaseModel
 
 from motleycrew.tools.tool import MotleyTool
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class StructuredPassthroughTool(MotleyTool):
@@ -12,7 +14,7 @@ class StructuredPassthroughTool(MotleyTool):
 
     def __init__(
         self,
-        schema: Type[BaseModel],
+        schema: Type[T],
         post_process: Optional[Callable] = None,
         return_direct: bool = True,
         **kwargs
@@ -28,7 +30,7 @@ class StructuredPassthroughTool(MotleyTool):
         self.schema = schema
         self.post_process = post_process
 
-    def run(self, **kwargs) -> Any:
+    def run(self, **kwargs) -> T:
         """
         Run the tool with the provided inputs.
         """
