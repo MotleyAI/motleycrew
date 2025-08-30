@@ -3,7 +3,7 @@ from langchain_core.runnables import RunnableLambda
 
 from motleycrew.common import LLMFramework
 from motleycrew.common.llms import init_llm
-from motleycrew.tools.image import image_file_to_human_message
+from motleycrew.tools.image import image_to_human_message
 
 
 def create_multimodal_messages(context: dict) -> list[HumanMessage]:
@@ -23,7 +23,7 @@ def create_multimodal_messages(context: dict) -> list[HumanMessage]:
 
     # Add image message if provided
     if "image_path" in context:
-        messages.append(image_file_to_human_message(context["image_path"]))
+        messages.append(image_to_human_message(context["image_path"]))
 
     return messages
 

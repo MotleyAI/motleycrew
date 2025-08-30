@@ -1,7 +1,8 @@
 import pytest
 from langchain_core.messages import HumanMessage
+from unittest.mock import MagicMock
 
-from motleycrew.tools.image import image_file_to_human_message
+from motleycrew.tools.image import image_file_to_human_message, is_this_a_chart
 
 
 def test_image_file_to_human_message():
@@ -36,3 +37,37 @@ def test_image_file_to_human_message_jpg():
     finally:
         import os
         os.unlink(temp_path)
+
+
+def test_is_this_a_chart_with_chart_image():
+    """Test that is_this_a_chart correctly identifies a chart image."""
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.is_chart = True
+    
+    mock_structured_llm = MagicMock()
+    mock_structured_llm.invoke.return_value = mock_response
+    mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
+    
+    result = is_this_a_chart("examples/images/chart.png", mock_llm)
+    
+    assert result is True
+    mock_llm.with_structured_output.assert_called_once()
+    mock_structured_llm.invoke.assert_called_once()
+
+
+def test_is_this_a_chart_with_non_chart_image():
+    """Test that is_this_a_chart correctly identifies a non-chart image."""
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.is_chart = False
+    
+    mock_structured_llm = MagicMock()
+    mock_structured_llm.invoke.return_value = mock_response
+    mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
+    
+    result = is_this_a_chart("examples/images/girl.png", mock_llm)
+    
+    assert result is False
+    mock_llm.with_structured_output.assert_called_once()
+    mock_structured_llm.invoke.assert_called_once()
