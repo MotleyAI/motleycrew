@@ -102,6 +102,20 @@ def image_to_human_message(source) -> HumanMessage:
 
 
 def is_this_a_chart(image: str | ImageData, llm: BaseLanguageModel) -> bool:
+    prompt = """Classify this image as a chart or not. 
+              By chart here is meant an image that contains data that can be extracted into a table, 
+              create with the intent of displaying said data to the user, such as could be
+              produced by matplotlib, plotly, or similar software. 
+              If this image is more of a decorative kind, return False, even if it contains a chart as
+              part of the imagery. 
+              Only return True if it's a genuine chart meant for data display 
+              of some sort, for example using lines, bars, funnels, pies, etc., shown without distortion and 
+              only shown using elements that could have been produced by charting software such 
+              as matplotlib or plotly.
+              Glyphs without axes are NOT charts.
+              """
+    human_msg = HumanMessage(content=prompt)
+
     class Response(BaseModel):
         is_chart: bool = Field(
             description="True if the image contains a chart with data, False otherwise"
@@ -113,5 +127,5 @@ def is_this_a_chart(image: str | ImageData, llm: BaseLanguageModel) -> bool:
     image_msg = image_to_human_message(image)
 
     structured_llm = llm.with_structured_output(Response).bind(stream=False)
-    result = structured_llm.invoke([image_msg])
+    result = structured_llm.invoke([human_msg, image_msg])
     return result.is_chart
