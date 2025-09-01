@@ -101,7 +101,7 @@ def image_to_human_message(source) -> HumanMessage:
         raise TypeError(f"Expected str or ImageData, got {type(source)}")
 
 
-def is_this_a_chart(image: str | ImageData, llm: BaseLanguageModel) -> bool:
+def is_this_a_chart(image, llm: BaseLanguageModel) -> bool:
     prompt = """Classify this image as a chart or not. 
               By chart here is meant an image that contains data that can be extracted into a table, 
               create with the intent of displaying said data to the user, such as could be
@@ -120,9 +120,6 @@ def is_this_a_chart(image: str | ImageData, llm: BaseLanguageModel) -> bool:
         is_chart: bool = Field(
             description="True if the image contains a chart with data, False otherwise"
         )
-
-    if isinstance(image, str):
-        image = ImageData.from_file(image)
 
     image_msg = image_to_human_message(image)
 
