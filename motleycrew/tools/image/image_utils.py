@@ -103,7 +103,9 @@ def image_to_human_message(source) -> HumanMessage:
 
 def is_this_a_chart(image: str | ImageData, llm: BaseLanguageModel) -> bool:
     class Response(BaseModel):
-        is_chart: bool = Field(description="True if the image contains a chart, False otherwise")
+        is_chart: bool = Field(
+            description="True if the image contains a chart with data, False otherwise"
+        )
 
     if isinstance(image, str):
         image = ImageData.from_file(image)
