@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Optional, Type
+from typing import Any, Callable, Optional, Type
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.prompts.base import BasePromptTemplate
@@ -11,23 +11,17 @@ from motleycrew.tools import MotleyTool
 from motleycrew.tools.structured_passthrough import StructuredPassthroughTool
 
 
-class PivotConfigToolInputSchema(BaseModel):
-    question: str = Field(description="The question to answer with the pivot chart.")
-    datasource_kv_store_keys: List[str] = Field(
-        description="The key(s) of the datasource(s) to use in the KV store."
-    )
-
-
 class AgenticValidationLoop(MotleyTool):
 
     def __init__(
         self,
-        name: str,
-        description: str,
         prompt: str | BasePromptTemplate,
+        name: str | None = None,
+        description: str | None = None,
         schema: Optional[Type[BaseModel]] = None,
         post_process: Optional[Callable] = None,
         llm: Optional[Any] = None,
+        handle_exceptions: bool | list[Type[Exception]] = True,
     ):
         super().__init__(
             name=name,
@@ -50,6 +44,7 @@ class AgenticValidationLoop(MotleyTool):
 
         self.schema = schema
         self.post_process = post_process
+        self.handle_exceptions = handle_exceptions
 
     def run(self, **kwargs) -> Any:
         """
@@ -61,7 +56,7 @@ class AgenticValidationLoop(MotleyTool):
         output_tool = StructuredPassthroughTool(
             schema=self.schema,
             post_process=self.post_process,
-            handle_exceptions=True,
+            handle_exceptions=self.handle_exceptions,
         )
 
         agent = ReActToolCallingMotleyAgent(

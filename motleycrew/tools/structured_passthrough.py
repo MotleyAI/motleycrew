@@ -1,4 +1,4 @@
-from typing import Type, Any, Optional, Callable
+from typing import Any, Callable, Optional, Type
 
 from pydantic import BaseModel
 
@@ -13,13 +13,15 @@ class StructuredPassthroughTool(MotleyTool):
     def __init__(
         self,
         schema: Type[BaseModel],
+        name: str = "structured_passthrough_tool",
+        description: str = "A tool that checks output validity.",
         post_process: Optional[Callable] = None,
         return_direct: bool = True,
         **kwargs
     ):
         super().__init__(
-            name="structured_passthrough_tool",
-            description="A tool that checks output validity.",
+            name=name,
+            description=description,
             args_schema=schema,
             return_direct=return_direct,
             **kwargs
