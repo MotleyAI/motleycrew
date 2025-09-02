@@ -1,6 +1,6 @@
 from motleycrew.common import LLMFramework
 from motleycrew.common.llms import init_llm
-from motleycrew.tools.image.image_utils import is_this_a_chart
+from motleycrew.utils.image_utils import is_this_a_chart
 
 llm = init_llm(llm_framework=LLMFramework.LANGCHAIN, llm_name="gpt-5")
 

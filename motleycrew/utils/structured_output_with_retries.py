@@ -19,7 +19,7 @@ def structured_output_with_retries(
 
     Args:
         schema: The Pydantic model to extract
-        prompt: System instructions for the extraction task
+        prompt: Instructions
         input_messages: List of messages containing the image and text
         language_model: The language model to use
 
