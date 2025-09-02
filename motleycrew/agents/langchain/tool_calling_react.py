@@ -8,7 +8,7 @@ from langchain.agents.format_scratchpad.tools import format_to_tool_messages
 from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableConfig
 from langchain_core.runnables.history import GetSessionHistoryCallable
 from langchain_core.tools import BaseTool
 
@@ -70,7 +70,7 @@ def create_tool_calling_react_agent(
 ) -> Runnable:
     internal_prompt = internal_prompt.partial(
         tools=render_text_description(list(tools)),
-        output_handlers=render_text_description(output_handlers) if force_output_handler else "",
+        output_handlers=(render_text_description(output_handlers) if force_output_handler else ""),
     )
     check_variables(internal_prompt)
 
@@ -113,6 +113,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
         force_output_handler: bool = False,
         handle_parsing_errors: bool = False,
         llm: BaseChatModel | None = None,
+        stream: bool = False,
         max_iterations: int | None = Defaults.DEFAULT_REACT_AGENT_MAX_ITERATIONS,
         internal_prompt: ChatPromptTemplate | None = None,
         intermediate_steps_processor: Callable | None = None,
@@ -185,6 +186,8 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
         if llm is None:
             llm = init_llm(llm_framework=LLMFramework.LANGCHAIN)
 
+        llm.bind(stream=stream)
+
         if not tools:
             raise ValueError("You must provide at least one tool to the ReActToolCallingAgent")
 
@@ -214,6 +217,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
                 handle_parsing_errors=handle_parsing_errors,
                 verbose=verbose,
                 max_iterations=max_iterations,
+                stream_runnable=stream,
             )
             return agent_executor
 
