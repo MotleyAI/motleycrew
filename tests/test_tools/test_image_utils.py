@@ -3,21 +3,21 @@ import pytest
 from langchain_core.messages import HumanMessage
 from unittest.mock import MagicMock
 
-from motleycrew.tools.image import image_file_to_human_message, is_this_a_chart
+from motleycrew.utils.image_utils import image_file_to_human_message, is_this_a_chart
 
 
 @pytest.fixture
 def image_path_girl():
     """Fixture providing absolute path to girl.png test image."""
     here = os.path.dirname(__file__)
-    return os.path.abspath(os.path.join(here, '..', '..', 'examples', 'images', 'girl.png'))
+    return os.path.abspath(os.path.join(here, "..", "..", "examples", "images", "girl.png"))
 
 
 @pytest.fixture
 def image_path_chart():
     """Fixture providing absolute path to chart.png test image."""
     here = os.path.dirname(__file__)
-    return os.path.abspath(os.path.join(here, '..', '..', 'examples', 'images', 'chart.png'))
+    return os.path.abspath(os.path.join(here, "..", "..", "examples", "images", "chart.png"))
 
 
 def test_image_file_to_human_message(image_path_girl):
