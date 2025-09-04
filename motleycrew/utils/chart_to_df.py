@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from gslides_api.domain import ImageData
 from motleycrew.utils.structured_output_with_retries import structured_output_with_retries
-from motleycrew.tools.image import image_to_human_message
+from motleycrew.utils.image_utils import image_to_human_message
 
 
 class SeriesData(BaseModel):
