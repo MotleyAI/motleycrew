@@ -68,10 +68,6 @@ def extract_chart_data(
 
     Returns:
         ChartDataResult containing extracted data
-
-    Raises:
-        ImportError: If gslides-api is not available when using ImageData
-        TypeError: If image is neither string nor ImageData
     """
 
     # Second call: Extract data points with retries
