@@ -4,16 +4,11 @@ import pandas as pd
 from langchain_core.language_models import BaseLanguageModel
 from pydantic import BaseModel, Field, model_validator
 
-# Import ImageData with fallback for when gslides-api is not available
-try:
-    from gslides_api.domain.domain import ImageData
-
-    _GSLIDES_AVAILABLE = True
-except ImportError:
-    ImageData = None
-    _GSLIDES_AVAILABLE = False
 from motleycrew.utils.structured_output_with_retries import structured_output_with_retries
-from motleycrew.utils.image_utils import image_to_human_message
+from motleycrew.utils.image_utils import (
+    human_message_from_image_bytes,
+    image_file_to_bytes_and_mime_type,
+)
 
 
 class SeriesData(BaseModel):
@@ -50,29 +45,35 @@ class ChartDataResult(BaseModel):
         return pd.DataFrame(df_data)
 
 
+def extract_chart_data_from_file(
+    image_path: str, llm: BaseLanguageModel, series_names: List[str] | None = None
+) -> ChartDataResult:
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path)
+    return extract_chart_data(image_bytes, mime_type, llm, series_names)
+
+
 def extract_chart_data(
-    image: str | ImageData, llm: BaseLanguageModel, series_names: List[str] | None = None
+    image_bytes: bytes,
+    mime_type: str,
+    llm: BaseLanguageModel,
+    series_names: List[str] | None = None,
 ) -> ChartDataResult:
     """Extract chart data from image
-    
+
     Args:
-        image: Either a file path string or an ImageData object
-        llm: Language model for extraction
-        series_names: Optional list of expected series names
-        
+        image_bytes: Image data as bytes
+        mime_type: MIME type of the image (e.g., 'image/jpeg', 'image/png')
+        llm: Language model to use for extraction
+        series_names: Optional list of series names to extract
+
     Returns:
         ChartDataResult containing extracted data
-        
+
     Raises:
         ImportError: If gslides-api is not available when using ImageData
         TypeError: If image is neither string nor ImageData
     """
-    # Validate ImageData usage
-    if not isinstance(image, str):
-        if not _GSLIDES_AVAILABLE:
-            raise ImportError("gslides-api package is required to use ImageData objects")
-        if not isinstance(image, ImageData):
-            raise TypeError(f"Expected str or ImageData, got {type(image)}")
+
     # Second call: Extract data points with retries
     print("\nExtracting chart data...")
     if series_names:
@@ -128,7 +129,7 @@ not necesarily in the same order (use the chart to match these names to the avai
     data_result = structured_output_with_retries(
         schema=ChartDataResult,
         prompt=data_prompt,
-        input_messages=[image_to_human_message(image)],
+        input_messages=[human_message_from_image_bytes(image_bytes, mime_type)],
         language_model=llm,
     )
 

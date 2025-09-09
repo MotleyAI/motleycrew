@@ -1,32 +1,32 @@
 import base64
 import tempfile
 import pytest
+from unittest.mock import MagicMock
 
 from motleycrew.utils.image_utils import (
-    _create_human_message_from_base64,
-    image_file_to_human_message,
-    image_data_to_human_message,
-    image_to_human_message,
-    _GSLIDES_AVAILABLE,
+    human_message_from_image_bytes,
+    image_file_to_bytes_and_mime_type,
+    is_this_a_chart,
 )
 from langchain_core.messages import HumanMessage
 
 
-def test_create_human_message_from_base64():
-    """Test creating HumanMessage from base64 data."""
-    base64_data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+def test_human_message_from_image_bytes():
+    """Test creating HumanMessage from image bytes."""
+    # Simple 1x1 pixel PNG data
+    image_bytes = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==")
     mime_type = "image/png"
 
-    message = _create_human_message_from_base64(base64_data, mime_type)
+    message = human_message_from_image_bytes(image_bytes, mime_type)
 
     assert isinstance(message, HumanMessage)
     assert len(message.content) == 1
     assert message.content[0]["type"] == "image_url"
-    assert message.content[0]["image_url"]["url"] == f"data:{mime_type};base64,{base64_data}"
+    assert message.content[0]["image_url"]["url"].startswith(f"data:{mime_type};base64,")
 
 
-def test_image_file_to_human_message():
-    """Test creating HumanMessage from image file."""
+def test_image_file_to_bytes_and_mime_type():
+    """Test extracting bytes and mime type from image file."""
     # Create a temporary image file
     image_content = b"fake image data"
 
@@ -34,117 +34,68 @@ def test_image_file_to_human_message():
         tmp_file.write(image_content)
         tmp_file.flush()
 
-        message = image_file_to_human_message(tmp_file.name)
+        image_bytes, mime_type = image_file_to_bytes_and_mime_type(tmp_file.name)
 
-        assert isinstance(message, HumanMessage)
-        assert len(message.content) == 1
-        assert message.content[0]["type"] == "image_url"
-
-        # Decode the base64 to verify content
-        url = message.content[0]["image_url"]["url"]
-        assert url.startswith("data:image/jpeg;base64,")
-        base64_part = url.split("base64,")[1]
-        decoded = base64.b64decode(base64_part)
-        assert decoded == image_content
+        assert image_bytes == image_content
+        assert mime_type == "image/jpeg"
 
 
-def test_image_file_to_human_message_unknown_type():
-    """Test image_file_to_human_message with unknown file extension."""
+def test_image_file_to_bytes_and_mime_type_unknown_type():
+    """Test image_file_to_bytes_and_mime_type with unknown file extension."""
     image_content = b"fake image data"
 
     with tempfile.NamedTemporaryFile(suffix=".unknown", delete=False) as tmp_file:
         tmp_file.write(image_content)
         tmp_file.flush()
 
-        message = image_file_to_human_message(tmp_file.name)
+        image_bytes, mime_type = image_file_to_bytes_and_mime_type(tmp_file.name)
 
+        assert image_bytes == image_content
         # Should default to image/jpeg
-        url = message.content[0]["image_url"]["url"]
-        assert url.startswith("data:image/jpeg;base64,")
+        assert mime_type == "image/jpeg"
 
 
-@pytest.mark.skipif(not _GSLIDES_AVAILABLE, reason="gslides-api not available")
-def test_image_data_to_human_message():
-    """Test creating HumanMessage from ImageData."""
-    from gslides_api.domain.domain import ImageData
+def test_is_this_a_chart():
+    """Test chart detection functionality."""
+    # Simple 1x1 pixel PNG data
+    image_bytes = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==")
+    mime_type = "image/png"
 
-    image_content = b"fake image data"
-    image_data = ImageData(content=image_content, mime_type="image/png", filename="test.png")
+    # Mock LLM
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.is_chart = True
 
-    message = image_data_to_human_message(image_data)
+    mock_structured_llm = MagicMock()
+    mock_structured_llm.invoke.return_value = mock_response
+    mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
 
-    assert isinstance(message, HumanMessage)
-    assert len(message.content) == 1
-    assert message.content[0]["type"] == "image_url"
+    result = is_this_a_chart(image_bytes, mime_type, mock_llm)
 
-    # Verify the content
-    url = message.content[0]["image_url"]["url"]
-    assert url.startswith("data:image/png;base64,")
-    base64_part = url.split("base64,")[1]
-    decoded = base64.b64decode(base64_part)
-    assert decoded == image_content
+    assert result is True
+    mock_llm.with_structured_output.assert_called_once()
+    mock_structured_llm.invoke.assert_called_once()
 
-
-@pytest.mark.skipif(_GSLIDES_AVAILABLE, reason="Testing without gslides-api")
-def test_image_data_to_human_message_no_gslides():
-    """Test image_data_to_human_message raises ImportError when gslides-api unavailable."""
-    with pytest.raises(ImportError, match="gslides-api package is required"):
-        image_data_to_human_message("fake_data")
+    # Verify the invoke was called with correct messages
+    invoke_args = mock_structured_llm.invoke.call_args[0][0]
+    assert len(invoke_args) == 2  # prompt message + image message
+    assert "Classify this image as a chart or not" in invoke_args[0].content
 
 
-@pytest.mark.skipif(not _GSLIDES_AVAILABLE, reason="gslides-api not available")
-def test_image_data_to_human_message_wrong_type():
-    """Test image_data_to_human_message raises TypeError for wrong type."""
-    with pytest.raises(TypeError, match="Expected ImageData object"):
-        image_data_to_human_message("not_image_data")
+def test_is_this_a_chart_not_chart():
+    """Test chart detection returns False for non-charts."""
+    image_bytes = b"fake image data"
+    mime_type = "image/jpeg"
 
+    # Mock LLM
+    mock_llm = MagicMock()
+    mock_response = MagicMock()
+    mock_response.is_chart = False
 
-def test_image_to_human_message_with_file_path():
-    """Test image_to_human_message with file path."""
-    image_content = b"fake image data"
+    mock_structured_llm = MagicMock()
+    mock_structured_llm.invoke.return_value = mock_response
+    mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
 
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-        tmp_file.write(image_content)
-        tmp_file.flush()
+    result = is_this_a_chart(image_bytes, mime_type, mock_llm)
 
-        message = image_to_human_message(tmp_file.name)
-
-        assert isinstance(message, HumanMessage)
-        assert len(message.content) == 1
-        assert message.content[0]["type"] == "image_url"
-
-
-@pytest.mark.skipif(not _GSLIDES_AVAILABLE, reason="gslides-api not available")
-def test_image_to_human_message_with_image_data():
-    """Test image_to_human_message with ImageData."""
-    from gslides_api.domain.domain import ImageData
-
-    image_content = b"fake image data"
-    image_data = ImageData(content=image_content, mime_type="image/png", filename="test.png")
-
-    message = image_to_human_message(image_data)
-
-    assert isinstance(message, HumanMessage)
-    assert len(message.content) == 1
-    assert message.content[0]["type"] == "image_url"
-
-
-def test_image_to_human_message_wrong_type():
-    """Test image_to_human_message raises TypeError for wrong type."""
-    with pytest.raises(TypeError, match="Expected str or ImageData"):
-        image_to_human_message(123)
-
-
-def test_image_to_human_message_preserves_backward_compatibility():
-    """Test that existing code using image_file_to_human_message still works."""
-    image_content = b"fake image data"
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-        tmp_file.write(image_content)
-        tmp_file.flush()
-
-        # Both should produce the same result
-        old_message = image_file_to_human_message(tmp_file.name)
-        new_message = image_to_human_message(tmp_file.name)
-
-        assert old_message.content == new_message.content
+    assert result is False
