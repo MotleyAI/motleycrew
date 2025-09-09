@@ -4,9 +4,11 @@ import pandas as pd
 from langchain_core.language_models import BaseLanguageModel
 from pydantic import BaseModel, Field, model_validator
 
-from gslides_api.domain import ImageData
 from motleycrew.utils.structured_output_with_retries import structured_output_with_retries
-from motleycrew.tools.image import image_to_human_message
+from motleycrew.utils.image_utils import (
+    human_message_from_image_bytes,
+    image_file_to_bytes_and_mime_type,
+)
 
 
 class SeriesData(BaseModel):
@@ -43,10 +45,31 @@ class ChartDataResult(BaseModel):
         return pd.DataFrame(df_data)
 
 
-def extract_chart_data(
-    image: str | ImageData, llm: BaseLanguageModel, series_names: List[str] | None = None
+def extract_chart_data_from_file(
+    image_path: str, llm: BaseLanguageModel, series_names: List[str] | None = None
 ) -> ChartDataResult:
-    """Extract chart data from image"""
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path)
+    return extract_chart_data(image_bytes, mime_type, llm, series_names)
+
+
+def extract_chart_data(
+    image_bytes: bytes,
+    mime_type: str,
+    llm: BaseLanguageModel,
+    series_names: List[str] | None = None,
+) -> ChartDataResult:
+    """Extract chart data from image
+
+    Args:
+        image_bytes: Image data as bytes
+        mime_type: MIME type of the image (e.g., 'image/jpeg', 'image/png')
+        llm: Language model to use for extraction
+        series_names: Optional list of series names to extract
+
+    Returns:
+        ChartDataResult containing extracted data
+    """
+
     # Second call: Extract data points with retries
     print("\nExtracting chart data...")
     if series_names:
@@ -102,7 +125,7 @@ not necesarily in the same order (use the chart to match these names to the avai
     data_result = structured_output_with_retries(
         schema=ChartDataResult,
         prompt=data_prompt,
-        input_messages=[image_to_human_message(image)],
+        input_messages=[human_message_from_image_bytes(image_bytes, mime_type)],
         language_model=llm,
     )
 

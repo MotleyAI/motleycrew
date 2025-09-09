@@ -1,4 +1,4 @@
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Callable
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import HumanMessage
@@ -13,6 +13,7 @@ def structured_output_with_retries(
     prompt: str,
     input_messages: List[HumanMessage] | dict,
     language_model: Optional[BaseLanguageModel] = None,
+    post_process: Callable[[BaseModel], BaseModel] = lambda x: x,
 ) -> BaseModel:
     """
     Use MotleyCrew agent with retries to extract structured output.
@@ -30,7 +31,7 @@ def structured_output_with_retries(
     generator = ReActToolCallingMotleyAgent(
         llm=language_model,
         name="structured_output_extractor",
-        tools=[StructuredPassthroughTool(schema=schema)],
+        tools=[StructuredPassthroughTool(schema=schema, post_process=post_process)],
         force_output_handler=True,
         verbose=True,
         max_iterations=15,

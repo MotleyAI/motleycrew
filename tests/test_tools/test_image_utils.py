@@ -3,7 +3,11 @@ import pytest
 from langchain_core.messages import HumanMessage
 from unittest.mock import MagicMock
 
-from motleycrew.utils.image_utils import image_file_to_human_message, is_this_a_chart
+from motleycrew.utils.image_utils import (
+    human_message_from_image_bytes,
+    image_file_to_bytes_and_mime_type,
+    is_this_a_chart,
+)
 
 
 @pytest.fixture
@@ -20,18 +24,19 @@ def image_path_chart():
     return os.path.abspath(os.path.join(here, "..", "..", "examples", "images", "chart.png"))
 
 
-def test_image_file_to_human_message(image_path_girl):
-    """Test that image_file_to_human_message creates a proper HumanMessage."""
-    result = image_file_to_human_message(image_path_girl)
+def test_human_message_from_image_bytes(image_path_girl):
+    """Test that human_message_from_image_bytes creates a proper HumanMessage."""
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path_girl)
+    result = human_message_from_image_bytes(image_bytes, mime_type)
 
     assert isinstance(result, HumanMessage)
     assert len(result.content) == 1
     assert result.content[0]["type"] == "image_url"
-    assert "data:image/png;base64," in result.content[0]["image_url"]["url"]
+    assert f"data:{mime_type};base64," in result.content[0]["image_url"]["url"]
 
 
-def test_image_file_to_human_message_jpg():
-    """Test with a different image format."""
+def test_image_file_to_bytes_and_mime_type_jpg():
+    """Test extracting bytes and mime type from different image format."""
     # Create a simple test image file temporarily
     import tempfile
     import base64
@@ -46,7 +51,12 @@ def test_image_file_to_human_message_jpg():
         temp_path = f.name
 
     try:
-        result = image_file_to_human_message(temp_path)
+        image_bytes, mime_type = image_file_to_bytes_and_mime_type(temp_path)
+        assert image_bytes == jpeg_data
+        assert mime_type == "image/jpeg"
+        
+        # Test creating message from bytes
+        result = human_message_from_image_bytes(image_bytes, mime_type)
         assert isinstance(result, HumanMessage)
         assert "data:image/jpeg;base64," in result.content[0]["image_url"]["url"]
     finally:
@@ -65,7 +75,9 @@ def test_is_this_a_chart_with_chart_image(image_path_chart):
     mock_structured_llm.invoke.return_value = mock_response
     mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
 
-    result = is_this_a_chart(image_path_chart, mock_llm)
+    # Get bytes and mime type from the image file
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path_chart)
+    result = is_this_a_chart(image_bytes, mime_type, mock_llm)
 
     assert result is True
     mock_llm.with_structured_output.assert_called_once()
@@ -82,7 +94,9 @@ def test_is_this_a_chart_with_non_chart_image(image_path_girl):
     mock_structured_llm.invoke.return_value = mock_response
     mock_llm.with_structured_output.return_value.bind.return_value = mock_structured_llm
 
-    result = is_this_a_chart(image_path_girl, mock_llm)
+    # Get bytes and mime type from the image file
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path_girl)
+    result = is_this_a_chart(image_bytes, mime_type, mock_llm)
 
     assert result is False
     mock_llm.with_structured_output.assert_called_once()
