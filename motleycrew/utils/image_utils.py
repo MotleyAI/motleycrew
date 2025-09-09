@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 # Import ImageData with fallback for when gslides-api is not available
 try:
-    from gslides_api.domain import ImageData
+    from gslides_api.domain.domain import ImageData
 
     _GSLIDES_AVAILABLE = True
 except ImportError:

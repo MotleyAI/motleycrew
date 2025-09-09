@@ -66,7 +66,7 @@ def test_image_file_to_human_message_unknown_type():
 @pytest.mark.skipif(not _GSLIDES_AVAILABLE, reason="gslides-api not available")
 def test_image_data_to_human_message():
     """Test creating HumanMessage from ImageData."""
-    from gslides_api.domain import ImageData
+    from gslides_api.domain.domain import ImageData
 
     image_content = b"fake image data"
     image_data = ImageData(content=image_content, mime_type="image/png", filename="test.png")
@@ -117,7 +117,7 @@ def test_image_to_human_message_with_file_path():
 @pytest.mark.skipif(not _GSLIDES_AVAILABLE, reason="gslides-api not available")
 def test_image_to_human_message_with_image_data():
     """Test image_to_human_message with ImageData."""
-    from gslides_api.domain import ImageData
+    from gslides_api.domain.domain import ImageData
 
     image_content = b"fake image data"
     image_data = ImageData(content=image_content, mime_type="image/png", filename="test.png")
