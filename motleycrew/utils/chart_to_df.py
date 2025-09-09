@@ -4,7 +4,14 @@ import pandas as pd
 from langchain_core.language_models import BaseLanguageModel
 from pydantic import BaseModel, Field, model_validator
 
-from gslides_api.domain.domain import ImageData
+# Import ImageData with fallback for when gslides-api is not available
+try:
+    from gslides_api.domain.domain import ImageData
+
+    _GSLIDES_AVAILABLE = True
+except ImportError:
+    ImageData = None
+    _GSLIDES_AVAILABLE = False
 from motleycrew.utils.structured_output_with_retries import structured_output_with_retries
 from motleycrew.utils.image_utils import image_to_human_message
 
@@ -46,7 +53,26 @@ class ChartDataResult(BaseModel):
 def extract_chart_data(
     image: str | ImageData, llm: BaseLanguageModel, series_names: List[str] | None = None
 ) -> ChartDataResult:
-    """Extract chart data from image"""
+    """Extract chart data from image
+    
+    Args:
+        image: Either a file path string or an ImageData object
+        llm: Language model for extraction
+        series_names: Optional list of expected series names
+        
+    Returns:
+        ChartDataResult containing extracted data
+        
+    Raises:
+        ImportError: If gslides-api is not available when using ImageData
+        TypeError: If image is neither string nor ImageData
+    """
+    # Validate ImageData usage
+    if not isinstance(image, str):
+        if not _GSLIDES_AVAILABLE:
+            raise ImportError("gslides-api package is required to use ImageData objects")
+        if not isinstance(image, ImageData):
+            raise TypeError(f"Expected str or ImageData, got {type(image)}")
     # Second call: Extract data points with retries
     print("\nExtracting chart data...")
     if series_names:
