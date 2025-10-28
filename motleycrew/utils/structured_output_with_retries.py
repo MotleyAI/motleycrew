@@ -1,4 +1,4 @@
-from typing import List, Optional, Type, Callable
+from typing import Callable, List, Optional, Type, TypeVar
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import HumanMessage
@@ -7,15 +7,17 @@ from pydantic import BaseModel
 from motleycrew.agents.langchain import ReActToolCallingMotleyAgent
 from motleycrew.tools.structured_passthrough import StructuredPassthroughTool
 
+T = TypeVar("T", bound=BaseModel)
+
 
 def structured_output_with_retries(
-    schema: Type[BaseModel],
+    schema: Type[T],
     prompt: str,
     input_messages: List[HumanMessage] | dict,
     language_model: Optional[BaseLanguageModel] = None,
     post_process: Callable[[BaseModel], BaseModel] = lambda x: x,
     handle_exceptions: bool | list[Type[Exception]] = True,
-) -> BaseModel:
+) -> T:
     """
     Use MotleyCrew agent with retries to extract structured output.
 
