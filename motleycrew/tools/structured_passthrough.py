@@ -36,6 +36,12 @@ class StructuredPassthroughTool(MotleyTool):
         """
         Run the tool with the provided inputs.
         """
+
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                kwargs[k] = [
+                    self.schema.model_dump(i) if isinstance(i, BaseModel) else i for i in v
+                ]
         # Validate the input against the schema
         validated_input = self.schema(**kwargs)
 
