@@ -26,6 +26,8 @@ def structured_output_with_retries(
         prompt: Instructions
         input_messages: List of messages containing the image and text
         language_model: The language model to use
+        post_process: Optional function to post-process the output, for example for validation
+        handle_exceptions: Whether to handle exceptions (True/False) or a list of specific exception types to handle
 
     Returns:
         An instance of the schema with extracted data
