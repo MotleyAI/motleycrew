@@ -1,4 +1,5 @@
 import pytest
+from typing import List
 from pydantic import BaseModel, ValidationError
 
 from motleycrew.tools.structured_passthrough import StructuredPassthroughTool
@@ -7,6 +8,22 @@ from motleycrew.tools.structured_passthrough import StructuredPassthroughTool
 class SampleSchema(BaseModel):
     name: str
     age: int
+
+
+class B(BaseModel):
+    id: int
+    value: str
+    active: bool = True
+
+
+class C(BaseModel):
+    id: int
+    value: str
+    active: bool = True
+
+
+class A(BaseModel):
+    member: List[B]
 
 
 @pytest.fixture
@@ -65,3 +82,33 @@ def test_structured_passthrough_tool_post_process_noop(structured_passthrough_to
     result = tool_with_post_process.run(**input_data)
     assert result.name == "John Doe"
     assert result.age == 30
+
+
+def test_structured_passthrough_tool_with_nested_model_instances():
+    """Test that StructuredPassthroughTool handles lists of child class instances correctly."""
+    tool = StructuredPassthroughTool(schema=A)
+
+    # Create actual instances of BChild (child class of B) instead of dictionaries
+    b1 = C(id=1, value="first")
+    b2 = C(id=2, value="second", active=False)
+    b3 = C(id=3, value="third")  # Uses default extra_field
+
+    # Call run with a list of actual BaseModel child class instances
+    result = tool.run(member=[b1, b2, b3])
+
+    # Verify the result
+    assert isinstance(result, A)
+    assert len(result.member) == 3
+
+    # Verify each member was properly validated
+    assert result.member[0].id == 1
+    assert result.member[0].value == "first"
+    assert result.member[0].active is True
+
+    assert result.member[1].id == 2
+    assert result.member[1].value == "second"
+    assert result.member[1].active is False
+
+    assert result.member[2].id == 3
+    assert result.member[2].value == "third"
+    assert result.member[2].active is True

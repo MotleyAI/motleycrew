@@ -16,6 +16,7 @@ def structured_output_with_retries(
     input_messages: List[HumanMessage] | dict,
     language_model: Optional[BaseLanguageModel] = None,
     post_process: Callable[[BaseModel], BaseModel] = lambda x: x,
+    handle_exceptions: bool | list[Type[Exception]] = True,
 ) -> T:
     """
     Use MotleyCrew agent with retries to extract structured output.
@@ -25,6 +26,8 @@ def structured_output_with_retries(
         prompt: Instructions
         input_messages: List of messages containing the image and text
         language_model: The language model to use
+        post_process: Optional function to post-process the output, for example for validation
+        handle_exceptions: Whether to handle exceptions (True/False) or a list of specific exception types to handle
 
     Returns:
         An instance of the schema with extracted data
@@ -33,7 +36,11 @@ def structured_output_with_retries(
     generator = ReActToolCallingMotleyAgent(
         llm=language_model,
         name="structured_output_extractor",
-        tools=[StructuredPassthroughTool(schema=schema, post_process=post_process)],
+        tools=[
+            StructuredPassthroughTool(
+                schema=schema, post_process=post_process, handle_exceptions=handle_exceptions
+            )
+        ],
         force_output_handler=True,
         verbose=True,
         max_iterations=15,
