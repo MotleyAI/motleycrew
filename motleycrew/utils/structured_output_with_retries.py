@@ -13,7 +13,7 @@ T = TypeVar("T", bound=BaseModel)
 def structured_output_with_retries(
     schema: Type[T],
     prompt: str,
-    input_messages: List[HumanMessage] | dict,
+    input_messages: List[HumanMessage] | dict | str,
     language_model: Optional[BaseLanguageModel] = None,
     post_process: Callable[[BaseModel], BaseModel] = lambda x: x,
     handle_exceptions: bool | list[Type[Exception]] = True,
@@ -23,8 +23,9 @@ def structured_output_with_retries(
 
     Args:
         schema: The Pydantic model to extract
-        prompt: Instructions
-        input_messages: List of messages containing the image and text
+        prompt: Instructions, potentially including {variables}
+        input_messages: If prompt contains variables, a dict with variable names as keys; otherwise
+         a list of messages containing the image and text or a single string with the text
         language_model: The language model to use
         post_process: Optional function to post-process the output, for example for validation
         handle_exceptions: Whether to handle exceptions (True/False) or a list of specific exception types to handle
@@ -32,6 +33,8 @@ def structured_output_with_retries(
     Returns:
         An instance of the schema with extracted data
     """
+    if isinstance(input_messages, str):
+        input_messages = [HumanMessage(content=input_messages)]
 
     generator = ReActToolCallingMotleyAgent(
         llm=language_model,
