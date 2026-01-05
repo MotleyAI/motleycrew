@@ -4,9 +4,12 @@ from langchain_core.messages import HumanMessage
 from unittest.mock import MagicMock
 
 from motleycrew.utils.image_utils import (
+    convert_image_to_png,
     human_message_from_image_bytes,
     image_file_to_bytes_and_mime_type,
     is_this_a_chart,
+    SUPPORTED_MIME_TYPES,
+    LIBREOFFICE_FORMATS,
 )
 
 
@@ -101,3 +104,44 @@ def test_is_this_a_chart_with_non_chart_image(image_path_girl):
     assert result is False
     mock_llm.with_structured_output.assert_called_once()
     mock_structured_llm.invoke.assert_called_once()
+
+
+def test_convert_image_to_png_supported_format_unchanged(image_path_girl):
+    """Test that supported formats are returned unchanged."""
+    image_bytes, mime_type = image_file_to_bytes_and_mime_type(image_path_girl)
+
+    # PNG should be returned unchanged
+    result_bytes, result_mime = convert_image_to_png(
+        image_bytes=image_bytes, source_mime_type=mime_type
+    )
+
+    assert result_bytes == image_bytes
+    assert result_mime == mime_type
+
+
+def test_convert_image_to_png_all_supported_types():
+    """Test that all supported MIME types are returned unchanged."""
+    dummy_bytes = b"fake image data"
+
+    for mime_type in SUPPORTED_MIME_TYPES:
+        result_bytes, result_mime = convert_image_to_png(
+            image_bytes=dummy_bytes, source_mime_type=mime_type
+        )
+        assert result_bytes == dummy_bytes
+        assert result_mime == mime_type
+
+
+def test_libreoffice_formats_constant():
+    """Test that LIBREOFFICE_FORMATS contains expected EMF/WMF types."""
+    assert "image/x-emf" in LIBREOFFICE_FORMATS
+    assert "image/x-wmf" in LIBREOFFICE_FORMATS
+    assert "image/emf" in LIBREOFFICE_FORMATS
+    assert "image/wmf" in LIBREOFFICE_FORMATS
+
+
+def test_supported_mime_types_constant():
+    """Test that SUPPORTED_MIME_TYPES contains expected types."""
+    assert "image/jpeg" in SUPPORTED_MIME_TYPES
+    assert "image/png" in SUPPORTED_MIME_TYPES
+    assert "image/gif" in SUPPORTED_MIME_TYPES
+    assert "image/webp" in SUPPORTED_MIME_TYPES

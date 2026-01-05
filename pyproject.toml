@@ -16,6 +16,7 @@ kuzu = "^0.8"
 cloudpickle = "^3.0.0"
 platformdirs = "^4.2.1"
 pydantic = "^2.7.1"
+wand = "^0.6.13"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
