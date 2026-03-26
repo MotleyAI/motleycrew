@@ -110,3 +110,66 @@ def test_agent_take_next_step(agent, run_kwargs):
     assert isinstance(step_result.return_values, dict)
     output_result = step_result.return_values.get("output")
     assert output_result == {"checked_output": input_data}
+
+
+@pytest.mark.fat
+def test_anthropic_output_handler_error_recovery():
+    """Test that Anthropic models handle output handler errors correctly.
+
+    This tests the fix for the "non-consecutive system messages" error that occurs
+    when using Anthropic models with force_output_handler=True. The error was caused
+    by passing error feedback as system messages instead of human messages.
+
+    See: https://github.com/anthropics/anthropic-sdk-python/issues/XXX
+    """
+    try:
+        from langchain_anthropic import ChatAnthropic
+    except ImportError:
+        pytest.skip("langchain-anthropic not installed")
+
+    from pydantic import BaseModel, Field
+
+    from motleycrew.common import LLMFramework, LLMProvider
+    from motleycrew.common.llms import init_llm
+    from motleycrew.tools import MotleyTool
+
+    # Define a simple output handler that requires a specific format
+    class SummaryOutput(BaseModel):
+        summary: str = Field(description="A brief summary")
+
+    class SummaryOutputHandler(MotleyTool):
+        def __init__(self):
+            super().__init__(
+                name="summary_output_handler",
+                description="Use this tool to return your final summary. You MUST use this tool to provide your answer.",
+                return_direct=True,
+            )
+
+        def run(self, summary: str) -> dict:
+            return {"summary": summary}
+
+    # Initialize Anthropic LLM
+    llm = init_llm(
+        llm_framework=LLMFramework.LANGCHAIN,
+        llm_provider=LLMProvider.ANTHROPIC,
+        llm_name="claude-sonnet-4-20250514",
+        temperature=0,
+    )
+
+    # Create agent with force_output_handler=True
+    # This will force the agent to use the output handler tool
+    agent = ReActToolCallingMotleyAgent(
+        llm=llm,
+        tools=[SummaryOutputHandler()],
+        verbose=True,
+        force_output_handler=True,
+    )
+
+    # Invoke the agent with a simple task
+    # The agent may initially try to return directly, triggering the error recovery path
+    # If the fix works, this should not raise "non-consecutive system messages" error
+    result = agent.invoke("What is 2 + 2? Provide a brief summary.")
+
+    # Verify we got a result (the fix allows the agent to recover and use the output handler)
+    assert result is not None
+    assert "summary" in result or isinstance(result, dict)

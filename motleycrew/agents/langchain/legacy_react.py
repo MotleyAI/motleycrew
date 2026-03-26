@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Optional, Sequence
 
 from langchain.agents import AgentExecutor, create_react_agent
+from langchain_core.callbacks import StdOutCallbackHandler
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.history import GetSessionHistoryCallable
 
 from motleycrew.agents.langchain import LangchainMotleyAgent
@@ -101,11 +103,15 @@ class LegacyReActMotleyAgent(LangchainMotleyAgent):
                     tool.handle_validation_error = True
 
             agent = create_react_agent(llm=llm, tools=langchain_tools, prompt=internal_prompt)
+            # As of langchain-core 0.3.81, verbose=True no longer prints output
+            # unless callbacks are explicitly provided
+            callbacks = [StdOutCallbackHandler()] if verbose else None
             agent_executor = AgentExecutor(
                 agent=agent,
                 tools=langchain_tools,
                 handle_parsing_errors=handle_parsing_errors,
                 verbose=verbose,
+                callbacks=callbacks,
             )
             return agent_executor
 

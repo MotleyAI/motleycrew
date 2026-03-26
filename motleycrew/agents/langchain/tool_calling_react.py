@@ -8,6 +8,7 @@ from langchain.agents.format_scratchpad.tools import format_to_tool_messages
 from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts.chat import ChatPromptTemplate
+from langchain_core.callbacks import StdOutCallbackHandler
 from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableConfig
 from langchain_core.runnables.history import GetSessionHistoryCallable
 from langchain_core.tools import BaseTool
@@ -211,6 +212,9 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
                 intermediate_steps_processor=intermediate_steps_processor,
             )
 
+            # As of langchain-core 0.3.81, verbose=True no longer prints output
+            # unless callbacks are explicitly provided
+            callbacks = [StdOutCallbackHandler()] if verbose else None
             agent_executor = AgentExecutor(
                 agent=agent,
                 tools=tools_for_langchain,
@@ -218,6 +222,7 @@ class ReActToolCallingMotleyAgent(LangchainMotleyAgent):
                 verbose=verbose,
                 max_iterations=max_iterations,
                 stream_runnable=stream,
+                callbacks=callbacks,
             )
             return agent_executor
 

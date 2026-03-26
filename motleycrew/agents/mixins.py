@@ -68,8 +68,10 @@ class LangchainOutputHandlingAgentMixin:
                 action, action_output = intermediate_step
                 if self._is_error_action(action):
                     # Add the interaction telling the LLM that it errored
+                    # Use "human" instead of "system" to avoid non-consecutive system messages
+                    # error with Anthropic models
                     additional_notes.append(("ai", action.tool_input["message"]))
-                    additional_notes.append(("system", action_output))
+                    additional_notes.append(("human", action_output))
                     to_remove_steps.append(intermediate_step)
 
             for to_remove_step in to_remove_steps:
@@ -134,8 +136,10 @@ class LangchainOutputHandlingAgentMixin:
             for intermediate_step in intermediate_steps:
                 action, action_output = intermediate_step
                 if self._is_error_action(action):
+                    # Use "human" instead of "system" to avoid non-consecutive system messages
+                    # error with Anthropic models
                     additional_notes.append(("ai", action.tool_input["message"]))
-                    additional_notes.append(("system", action_output))
+                    additional_notes.append(("human", action_output))
                     to_remove_steps.append(intermediate_step)
 
             for to_remove_step in to_remove_steps:
