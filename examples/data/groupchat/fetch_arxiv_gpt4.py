@@ -1,7 +1,8 @@
 # filename: fetch_arxiv_gpt4.py
-import urllib.request
 import urllib.parse
+import urllib.request
 import xml.etree.ElementTree as ET
+
 
 def search_arxiv(query):
     url = 'http://export.arxiv.org/api/query?'

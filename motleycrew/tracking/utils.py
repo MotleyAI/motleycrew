@@ -11,9 +11,10 @@ except ImportError:
 from langchain_core.callbacks import BaseCallbackHandler, BaseCallbackManager
 from langchain_core.runnables import RunnableConfig, ensure_config
 
-from .callbacks import LlamaIndexLunaryCallbackHandler
 from motleycrew.common import LLMFramework, logger
 from motleycrew.common.utils import ensure_module_is_installed
+
+from .callbacks import LlamaIndexLunaryCallbackHandler
 
 
 def get_lunary_public_key():

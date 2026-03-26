@@ -8,6 +8,7 @@ from motleycrew.crew import MotleyCrew
 from motleycrew.tasks import Task, TaskUnit
 from motleycrew.tasks.task_unit import TaskUnitType
 from motleycrew.tools import MotleyTool
+
 from .question import Question
 from .question_generator import QuestionGeneratorTool
 from .question_prioritizer import QuestionPrioritizerTool

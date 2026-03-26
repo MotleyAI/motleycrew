@@ -15,13 +15,13 @@ Features:
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
     import sqlglot
     from sqlglot import exp, parse, parse_one
-    from sqlglot.optimizer import optimize, qualify, annotate_types
     from sqlglot.errors import ParseError, UnsupportedError
+    from sqlglot.optimizer import annotate_types, optimize, qualify
 except ImportError:
     raise ImportError(
         "SQLGlot is required for SQL validation. Install it with: pip install sqlglot"

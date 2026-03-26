@@ -9,14 +9,14 @@ from unittest.mock import Mock, patch
 
 # gslides-api imports
 from gslides_api.domain_old.domain import Image, Transform
-from gslides_api.element.image import ImageElement
 from gslides_api.element.base import ElementKind
+from gslides_api.element.image import ImageElement
 
 # motleycrew imports
 from motleycrew.utils.image_utils import (
-    image_to_human_message,
     image_data_to_human_message,
     image_file_to_human_message,
+    image_to_human_message,
 )
 
 

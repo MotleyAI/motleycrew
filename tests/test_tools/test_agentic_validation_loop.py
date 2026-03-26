@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from pydantic import BaseModel, Field
+
+import pytest
 from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel, Field
 
 from motleycrew.tools.agentic_validation_loop import AgenticValidationLoop
 

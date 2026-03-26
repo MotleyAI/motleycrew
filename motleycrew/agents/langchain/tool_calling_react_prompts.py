@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import json
 
-from langchain_core.messages import BaseMessage, AIMessage, ToolMessage, SystemMessage, HumanMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.prompts.chat import (
     ChatPromptTemplate,

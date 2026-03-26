@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Type
+
 from motleycrew.storage import MotleyGraphNode, MotleyGraphNodeType
 
 

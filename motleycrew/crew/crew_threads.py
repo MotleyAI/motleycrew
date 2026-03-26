@@ -3,7 +3,7 @@
 import threading
 from enum import Enum
 from queue import Queue
-from typing import TYPE_CHECKING, Tuple, Any, List
+from typing import TYPE_CHECKING, Any, List, Tuple
 
 from langchain_core.runnables import Runnable
 

@@ -4,10 +4,12 @@ import pandas as pd
 from langchain_core.language_models import BaseLanguageModel
 from pydantic import BaseModel, Field, model_validator
 
-from motleycrew.utils.structured_output_with_retries import structured_output_with_retries
 from motleycrew.utils.image_utils import (
     human_message_from_image_bytes,
     image_file_to_bytes_and_mime_type,
+)
+from motleycrew.utils.structured_output_with_retries import (
+    structured_output_with_retries,
 )
 
 

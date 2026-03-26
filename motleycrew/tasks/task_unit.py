@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Optional, Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 from motleycrew.common import TaskUnitStatus
 from motleycrew.storage import MotleyGraphNode

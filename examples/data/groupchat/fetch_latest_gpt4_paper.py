@@ -1,6 +1,8 @@
 # filename: fetch_latest_gpt4_paper.py
-import requests
 from datetime import datetime
+
+import requests
+
 
 def fetch_latest_paper():
     # Define the API endpoint

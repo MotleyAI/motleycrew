@@ -5,7 +5,6 @@ Attributes:
 """
 import logging
 
-
 # init logger
 logger = logging.getLogger("motleycrew")
 stream_handler = logging.StreamHandler()

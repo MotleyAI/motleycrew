@@ -3,8 +3,7 @@ from typing import Optional
 import pytest
 
 from motleycrew.common import GraphStoreType
-from motleycrew.storage import MotleyGraphNode
-from motleycrew.storage import MotleyKuzuGraphStore
+from motleycrew.storage import MotleyGraphNode, MotleyKuzuGraphStore
 from tests.test_storage import GraphStoreFixtures
 
 

@@ -16,7 +16,7 @@ kuzu = "^0.8"
 cloudpickle = "^3.0.0"
 platformdirs = "^4.2.1"
 pydantic = "^2.7.1"
-wand = "^0.6.13"
+wand = "^0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
@@ -25,6 +25,7 @@ pytest-cov = "^4.1.0"
 flake8 = "^7.0.0"
 mypy = "^1.8.0"
 isort = "^5.13.2"
+pre-commit = "^4.5.1"
 sphinx = "^7.3.7"
 sphinx-rtd-theme = "^2.0.0"
 nbsphinx = "^0.9.4"
@@ -32,6 +33,9 @@ pypandoc_binary = "^1.13"
 ipykernel = "^6.29.4"
 nbsphinx-link = "^1.3.0"
 nbformat = "^5.10.4"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,5 +1,6 @@
-from typing import Optional, Any, TypeVar, TYPE_CHECKING
 from abc import ABC
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
+
 from pydantic import BaseModel
 
 if TYPE_CHECKING:

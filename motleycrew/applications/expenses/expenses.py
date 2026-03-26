@@ -1,6 +1,7 @@
-from motleycrew.agents.langchain import ReActToolCallingMotleyAgent
 from schema_delta import delta_generator
 from sql_tools import SQLExpression
+
+from motleycrew.agents.langchain import ReActToolCallingMotleyAgent
 
 schema_critic_prompt = """ You are an experienced data engineer and you have been tasked with reviewing whether a 
 SQL query correctly checks whether expenses conform to policy. You are given a schema, a query against it, and the 

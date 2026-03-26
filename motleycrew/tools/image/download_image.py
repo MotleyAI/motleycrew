@@ -4,7 +4,8 @@ from typing import Optional
 
 import requests
 
-from motleycrew.common import logger, utils as motley_utils
+from motleycrew.common import logger
+from motleycrew.common import utils as motley_utils
 
 
 def download_image(url: str, file_path: str) -> Optional[str]:

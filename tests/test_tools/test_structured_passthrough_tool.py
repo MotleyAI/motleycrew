@@ -1,5 +1,6 @@
-import pytest
 from typing import List
+
+import pytest
 from pydantic import BaseModel, ValidationError
 
 from motleycrew.tools.structured_passthrough import StructuredPassthroughTool

@@ -6,14 +6,12 @@ Kùzu graph store index.
 
 import json
 import os
-from typing import Any, Dict, Optional, Type, Collection
+from typing import Any, Collection, Dict, Optional, Type
 
 from kuzu import Connection, PreparedStatement, QueryResult
 
 from motleycrew.common import logger
-from motleycrew.storage import MotleyGraphNode
-from motleycrew.storage import MotleyGraphNodeType
-from motleycrew.storage import MotleyGraphStore
+from motleycrew.storage import MotleyGraphNode, MotleyGraphNodeType, MotleyGraphStore
 
 
 class MotleyKuzuGraphStore(MotleyGraphStore):

@@ -1,14 +1,15 @@
 import base64
 import tempfile
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from langchain_core.messages import HumanMessage
 
 from motleycrew.utils.image_utils import (
     human_message_from_image_bytes,
     image_file_to_bytes_and_mime_type,
     is_this_a_chart,
 )
-from langchain_core.messages import HumanMessage
 
 
 def test_human_message_from_image_bytes():

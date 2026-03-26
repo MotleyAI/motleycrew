@@ -4,6 +4,7 @@ from motleycrew.agents.langchain.tool_calling_react import ReActToolCallingMotle
 
 try:
     from langchain_community.tools import DuckDuckGoSearchRun
+
     # Test if we can actually create the tool (checks for duckduckgo_search module)
     DuckDuckGoSearchRun()
     DUCKDUCKGO_AVAILABLE = True

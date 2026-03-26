@@ -1,15 +1,16 @@
 import os
-import pytest
-from langchain_core.messages import HumanMessage
 from unittest.mock import MagicMock
 
+import pytest
+from langchain_core.messages import HumanMessage
+
 from motleycrew.utils.image_utils import (
+    LIBREOFFICE_FORMATS,
+    SUPPORTED_MIME_TYPES,
     convert_image_to_png,
     human_message_from_image_bytes,
     image_file_to_bytes_and_mime_type,
     is_this_a_chart,
-    SUPPORTED_MIME_TYPES,
-    LIBREOFFICE_FORMATS,
 )
 
 
@@ -41,8 +42,8 @@ def test_human_message_from_image_bytes(image_path_girl):
 def test_image_file_to_bytes_and_mime_type_jpg():
     """Test extracting bytes and mime type from different image format."""
     # Create a simple test image file temporarily
-    import tempfile
     import base64
+    import tempfile
 
     # Simple 1x1 pixel JPEG data
     jpeg_data = base64.b64decode(

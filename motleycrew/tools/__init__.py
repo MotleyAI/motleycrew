@@ -1,4 +1,5 @@
 """MotleyTool class and tools library."""
+# isort:skip_file
 
 from motleycrew.tools.tool import DirectOutput, MotleyTool, RetryConfig
 from motleycrew.tools.llm_tool import LLMTool

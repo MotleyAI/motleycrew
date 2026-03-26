@@ -4,6 +4,7 @@ Script for installing Pandoc in GitHub Actions CI environments.
 
 import os
 import shutil
+
 from pypandoc.pandoc_download import download_pandoc
 
 pandoc_location = os.path.abspath("../../.venv/_pandoc")

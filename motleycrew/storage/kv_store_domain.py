@@ -1,6 +1,6 @@
-from typing import Any, Optional
 from abc import ABC, abstractmethod
 from pprint import pprint
+from typing import Any, Optional
 
 
 class RetrievableObjectParent(ABC):

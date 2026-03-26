@@ -7,7 +7,7 @@ Attributes:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union, Optional, Protocol, TypeVar
+from typing import TYPE_CHECKING, Optional, Protocol, TypeVar, Union
 
 if TYPE_CHECKING:
     from langchain.tools import BaseTool
@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     except ImportError:
         LlamaIndex__BaseTool = "LlamaIndex__BaseTool"
 
-    from motleycrew.tools import MotleyTool
     from motleycrew.agents.abstract_parent import MotleyAgentAbstractParent
+    from motleycrew.tools import MotleyTool
 
 else:
     MotleyTool = "MotleyTool"

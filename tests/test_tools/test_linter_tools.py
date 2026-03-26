@@ -1,7 +1,7 @@
 import pytest
 
-from motleycrew.tools.code import PostgreSQLLinterTool, PythonLinterTool
 from motleycrew.common.exceptions import ModuleNotInstalled
+from motleycrew.tools.code import PostgreSQLLinterTool, PythonLinterTool
 
 
 @pytest.fixture

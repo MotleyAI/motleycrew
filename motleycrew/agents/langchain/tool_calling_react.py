@@ -6,10 +6,15 @@ from typing import Callable, Sequence
 from langchain.agents import AgentExecutor
 from langchain.agents.format_scratchpad.tools import format_to_tool_messages
 from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
+from langchain_core.callbacks import StdOutCallbackHandler
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts.chat import ChatPromptTemplate
-from langchain_core.callbacks import StdOutCallbackHandler
-from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableConfig
+from langchain_core.runnables import (
+    Runnable,
+    RunnableConfig,
+    RunnableLambda,
+    RunnablePassthrough,
+)
 from langchain_core.runnables.history import GetSessionHistoryCallable
 from langchain_core.tools import BaseTool
 

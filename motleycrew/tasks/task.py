@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence, List, Type, TypeVar, Generic, TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, List, Optional, Sequence, Type, TypeVar
 
 from langchain_core.runnables import Runnable
 
 from motleycrew.common.exceptions import TaskDependencyCycleError
-from motleycrew.storage import MotleyGraphStore, MotleyGraphNode, MotleyKuzuGraphStore
+from motleycrew.storage import MotleyGraphNode, MotleyGraphStore, MotleyKuzuGraphStore
 from motleycrew.tasks.task_unit import TaskUnitType
 from motleycrew.tools import MotleyTool
 

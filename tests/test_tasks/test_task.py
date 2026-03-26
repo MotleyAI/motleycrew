@@ -1,14 +1,13 @@
 from typing import List, Optional
 
 import pytest
-
 from langchain_core.runnables import Runnable
 
 from motleycrew import MotleyCrew
-from motleycrew.tools import MotleyTool
-from motleycrew.tasks import Task, TaskUnitType, TaskUnit
-from motleycrew.storage.graph_store_utils import init_graph_store
 from motleycrew.common.exceptions import TaskDependencyCycleError
+from motleycrew.storage.graph_store_utils import init_graph_store
+from motleycrew.tasks import Task, TaskUnit, TaskUnitType
+from motleycrew.tools import MotleyTool
 
 
 class TaskMock(Task):

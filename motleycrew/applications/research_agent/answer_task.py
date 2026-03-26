@@ -1,10 +1,12 @@
 from typing import List, Optional
 
-from langchain_core.runnables import Runnable
 from langchain_core.language_models import BaseLanguageModel
+from langchain_core.runnables import Runnable
 
 from motleycrew.applications.research_agent.question import Question
-from motleycrew.applications.research_agent.question_answerer import AnswerSubQuestionTool
+from motleycrew.applications.research_agent.question_answerer import (
+    AnswerSubQuestionTool,
+)
 from motleycrew.common import logger
 from motleycrew.crew import MotleyCrew
 from motleycrew.tasks import Task, TaskUnit

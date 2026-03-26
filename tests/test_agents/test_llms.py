@@ -1,9 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 from langchain_openai import ChatOpenAI
 from llama_index.llms.openai import OpenAI
-from unittest.mock import patch, MagicMock
 
-from motleycrew.common import LLMProvider, LLMFramework
+from motleycrew.common import LLMFramework, LLMProvider
 from motleycrew.common.exceptions import LLMProviderNotSupported
 from motleycrew.common.llms import init_llm
 
