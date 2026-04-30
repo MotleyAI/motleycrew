@@ -77,6 +77,41 @@ We have a small but growing collection of examples in our [documentation](https:
 - For a working example of custom tasks that fully utilize the knowledge graph backend, check out the [research agent](https://motleycrew.readthedocs.io/en/latest/examples/research_agent.html).
 
 
+## FAQ
+
+### What is motleycrew?
+motleycrew is a Python framework for building multi-agent AI systems. It lets you seamlessly mix and match AI agents and tools from popular frameworks (LangChain, LlamaIndex, CrewAI, Autogen), design advanced workflows, and leverage dynamic knowledge graphs — all with simplicity and elegance.
+
+### How does motleycrew differ from CrewAI or LangGraph?
+motleycrew is designed as a "conductor" that orchestrates agents and tools from multiple frameworks. Unlike CrewAI (which has its own agent model) or LangGraph (which focuses on graph-based workflows), motleycrew provides a unified interface that can integrate components from LangChain, LlamaIndex, CrewAI, and Autogen, giving you maximum flexibility.
+
+### Which AI frameworks are supported?
+motleycrew integrates with LangChain, LlamaIndex, CrewAI, and Autogen. Tools from LangChain and LlamaIndex are directly compatible, with more integrations coming soon. All components implement LangChain's Runnable API, making them compatible with LCEL.
+
+### How do I install motleycrew?
+Install via pip: `pip install motleycrew`. Requires Python 3.9+. See the [quickstart guide](https://motleycrew.readthedocs.io/en/latest/quickstart.html) for a complete overview.
+
+### What is the knowledge graph used for?
+Under the hood, tasks and all execution data are stored in a knowledge graph. You can use it to control the flow of your system or as a universal data store. Custom tasks can leverage the knowledge graph in any way you need. See the [key concepts documentation](https://motleycrew.readthedocs.io/en/latest/key_concepts.html) for details.
+
+### How does task chaining work?
+Use the `>>` operator to chain tasks together. The output of one task becomes available for the next, enabling sequential workflows. For more complex flows, use the knowledge graph to design sophisticated task dependencies.
+
+### What caching and observability features are available?
+motleycrew includes [motleycache](https://github.com/ShoggothAI/motleycache) for universal HTTP caching (including LLM and tool calls), and supports [Lunary](https://github.com/lunary-ai/lunary) for open-source observability — monitor agent performance, visualize system flows, and more.
+
+### Where can I find examples?
+Check the [documentation examples](https://motleycrew.readthedocs.io/en/latest/examples.html):
+- [Blog with images](https://motleycrew.readthedocs.io/en/latest/examples/blog_with_images.html) — agents, tools, crew, and SimpleTask
+- [Research agent](https://motleycrew.readthedocs.io/en/latest/examples/research_agent.html) — custom tasks with knowledge graph
+
+### Where can I get help?
+- **Documentation**: https://motleycrew.readthedocs.io
+- **Discord**: https://discord.gg/P4Pxqf9MEs
+- **Issues**: https://github.com/ShoggothAI/motleycrew/issues
+
+### How can I contribute?
+Contributions of any kind are welcome! Feel free to open an issue for bugs or feature requests, or submit a pull request. Join our Discord server to discuss ideas with the community.
 ## Support and contributions
 We have a community [Discord server](https://discord.gg/P4Pxqf9MEs) where you can ask questions, share your ideas, and get help with your projects.
 
